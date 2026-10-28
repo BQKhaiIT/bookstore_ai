@@ -1,0 +1,16 @@
+:root {
+  --bs-primary: #4f46e5;
+  --bs-primary-rgb: 79, 70, 229;
+  --bookstore-brand: #4f46e5;
+  --bookstore-accent: #0ea5e9;
+}
+
+.auth-brand-title {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--bookstore-brand);
+}
+
+.auth-subtitle {
+  color: var(--cui-secondary-color, #6b7785);
+}

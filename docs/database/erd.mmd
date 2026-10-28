@@ -1,0 +1,163 @@
+erDiagram
+    users {
+        bigint id PK
+        varchar name
+        varchar email UK
+        varchar password
+        varchar role
+        varchar status
+    }
+    user_addresses {
+        bigint id PK
+        bigint user_id FK
+        varchar recipient_name
+        varchar phone
+        text address_line
+        boolean is_default
+    }
+    publishers {
+        bigint id PK
+        varchar name UK
+    }
+    authors {
+        bigint id PK
+        varchar name
+    }
+    categories {
+        bigint id PK
+        varchar name
+        varchar slug UK
+    }
+    books {
+        bigint id PK
+        bigint publisher_id FK
+        varchar isbn UK
+        varchar title
+        bigint price
+        varchar cover_url
+        int stock_quantity
+        varchar status
+    }
+    book_authors {
+        bigint book_id PK,FK
+        bigint author_id PK,FK
+    }
+    book_categories {
+        bigint book_id PK,FK
+        bigint category_id PK,FK
+    }
+    carts {
+        bigint id PK
+        bigint user_id FK,UK
+    }
+    cart_items {
+        bigint id PK
+        bigint cart_id FK
+        bigint book_id FK
+        int quantity
+    }
+    wishlists {
+        bigint id PK
+        bigint user_id FK
+        bigint book_id FK
+    }
+    reviews {
+        bigint id PK
+        bigint user_id FK
+        bigint book_id FK
+        smallint rating
+        varchar status
+    }
+    orders {
+        bigint id PK
+        bigint user_id FK
+        varchar order_code UK
+        varchar idempotency_key
+        varchar status
+        bigint total_amount
+        jsonb shipping_address_snapshot
+    }
+    order_items {
+        bigint id PK
+        bigint order_id FK
+        bigint book_id FK
+        int quantity
+        bigint unit_price
+        bigint subtotal
+    }
+    payments {
+        bigint id PK
+        bigint order_id FK
+        varchar method
+        bigint amount
+        varchar status
+    }
+    visitor_sessions {
+        uuid id PK
+        bigint user_id FK
+        timestamptz started_at
+        timestamptz expires_at
+    }
+    user_behaviors {
+        bigint id PK
+        bigint user_id FK
+        uuid visitor_session_id FK
+        bigint book_id FK
+        varchar event_type
+    }
+    recommendation_models {
+        bigint id PK
+        varchar model_type
+        varchar version
+        jsonb parameters
+        jsonb metrics
+    }
+    recommendation_results {
+        bigint id PK
+        bigint model_id FK
+        bigint user_id FK
+        bigint book_id FK
+        decimal score
+        int rank
+    }
+    conversations {
+        bigint id PK
+        bigint user_id FK
+        varchar title
+    }
+    messages {
+        bigint id PK
+        bigint conversation_id FK
+        varchar role
+        text content
+    }
+
+    users ||--o{ user_addresses : has
+    publishers |o--o{ books : publishes
+    books ||--o{ book_authors : mapped
+    authors ||--o{ book_authors : writes
+    books ||--o{ book_categories : mapped
+    categories ||--o{ book_categories : classifies
+
+    users ||--o| carts : owns
+    carts ||--o{ cart_items : contains
+    books ||--o{ cart_items : added
+    users ||--o{ wishlists : saves
+    books ||--o{ wishlists : wished
+    users ||--o{ reviews : writes
+    books ||--o{ reviews : reviewed
+    users ||--o{ orders : places
+    orders ||--o{ order_items : has
+    books ||--o{ order_items : purchased
+    orders ||--o{ payments : has
+
+    users |o--o{ visitor_sessions : associated
+    users |o--o{ user_behaviors : performs
+    visitor_sessions |o--o{ user_behaviors : records
+    books ||--o{ user_behaviors : receives
+    recommendation_models ||--o{ recommendation_results : generates
+    users ||--o{ recommendation_results : receives
+    books ||--o{ recommendation_results : suggested
+
+    users ||--o{ conversations : starts
+    conversations ||--o{ messages : contains

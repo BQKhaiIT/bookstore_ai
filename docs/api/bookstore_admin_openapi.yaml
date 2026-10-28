@@ -1,0 +1,254 @@
+openapi: 3.1.0
+info:
+  title: BookStore AI — Admin API
+  version: 1.0.0
+  description: Admin REST API (prefix `/api/v1/admin`), Sanctum cookie session + verified admin.
+
+servers:
+  - url: http://localhost:8000/api/v1/admin
+
+tags:
+  - name: Admin
+
+security:
+  - cookieAuth: []
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: laravel_session
+
+paths:
+  /dashboard:
+    get:
+      tags: [Admin]
+      summary: Thống kê dashboard
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+
+  /books:
+    get:
+      tags: [Admin]
+      summary: Danh sách sách (search, filter, pagination)
+      responses:
+        '200':
+          description: OK
+    post:
+      tags: [Admin]
+      summary: Tạo sách
+      responses:
+        '201':
+          description: Created
+
+  /books/{book}:
+    get:
+      tags: [Admin]
+      summary: Chi tiết sách
+      responses:
+        '200':
+          description: OK
+    patch:
+      tags: [Admin]
+      summary: Cập nhật sách
+      responses:
+        '200':
+          description: OK
+    delete:
+      tags: [Admin]
+      summary: Xóa hoặc lưu trữ sách
+      responses:
+        '204':
+          description: Deleted
+        '200':
+          description: Archived when có order_items
+
+  /books/{book}/cover:
+    post:
+      tags: [Admin]
+      summary: Upload ảnh bìa
+      responses:
+        '200':
+          description: OK
+
+  /categories:
+    get:
+      tags: [Admin]
+      summary: Danh sách danh mục
+      responses:
+        '200':
+          description: OK
+    post:
+      tags: [Admin]
+      summary: Tạo danh mục
+      responses:
+        '201':
+          description: Created
+
+  /categories/{category}:
+    get:
+      tags: [Admin]
+      summary: Chi tiết danh mục
+      responses:
+        '200':
+          description: OK
+    patch:
+      tags: [Admin]
+      summary: Cập nhật danh mục
+      responses:
+        '200':
+          description: OK
+    delete:
+      tags: [Admin]
+      summary: Xóa danh mục
+      responses:
+        '204':
+          description: Deleted
+
+  /authors:
+    get:
+      tags: [Admin]
+      summary: Danh sách tác giả
+      responses:
+        '200':
+          description: OK
+    post:
+      tags: [Admin]
+      summary: Tạo tác giả
+      responses:
+        '201':
+          description: Created
+
+  /authors/{author}:
+    get:
+      tags: [Admin]
+      summary: Chi tiết tác giả
+      responses:
+        '200':
+          description: OK
+    patch:
+      tags: [Admin]
+      summary: Cập nhật tác giả
+      responses:
+        '200':
+          description: OK
+    delete:
+      tags: [Admin]
+      summary: Xóa tác giả
+      responses:
+        '204':
+          description: Deleted
+
+  /publishers:
+    get:
+      tags: [Admin]
+      summary: Danh sách NXB
+      responses:
+        '200':
+          description: OK
+    post:
+      tags: [Admin]
+      summary: Tạo NXB
+      responses:
+        '201':
+          description: Created
+
+  /publishers/{publisher}:
+    get:
+      tags: [Admin]
+      summary: Chi tiết NXB
+      responses:
+        '200':
+          description: OK
+    patch:
+      tags: [Admin]
+      summary: Cập nhật NXB
+      responses:
+        '200':
+          description: OK
+    delete:
+      tags: [Admin]
+      summary: Xóa NXB
+      responses:
+        '204':
+          description: Deleted
+
+  /orders:
+    get:
+      tags: [Admin]
+      summary: Danh sách đơn hàng
+      responses:
+        '200':
+          description: OK
+
+  /orders/{order}:
+    get:
+      tags: [Admin]
+      summary: Chi tiết đơn hàng
+      responses:
+        '200':
+          description: OK
+
+  /orders/{order}/status:
+    patch:
+      tags: [Admin]
+      summary: Cập nhật trạng thái đơn
+      responses:
+        '200':
+          description: OK
+        '409':
+          description: State conflict
+
+  /payments:
+    get:
+      tags: [Admin]
+      summary: Danh sách thanh toán
+      responses:
+        '200':
+          description: OK
+
+  /payments/{payment}/confirm-cod:
+    post:
+      tags: [Admin]
+      summary: Xác nhận COD
+      responses:
+        '200':
+          description: OK
+
+  /users:
+    get:
+      tags: [Admin]
+      summary: Danh sách người dùng
+      responses:
+        '200':
+          description: OK
+
+  /users/{user}/status:
+    patch:
+      tags: [Admin]
+      summary: Khóa/mở khóa tài khoản
+      responses:
+        '200':
+          description: OK
+
+  /reviews:
+    get:
+      tags: [Admin]
+      summary: Danh sách đánh giá
+      responses:
+        '200':
+          description: OK
+
+  /reviews/{review}:
+    patch:
+      tags: [Admin]
+      summary: Duyệt/từ chối đánh giá
+      responses:
+        '200':
+          description: OK

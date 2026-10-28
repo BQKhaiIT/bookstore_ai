@@ -1,0 +1,314 @@
+openapi: 3.1.0
+info:
+  title: BookStore AI — Module 1 (Authentication)
+  version: 1.0.0
+  description: |
+    Phân hệ xác thực SPA (Laravel Sanctum cookie session).
+    File gốc `bookstore_module1_openapi.yaml` không có trong workspace; tài liệu này mô tả các API Auth đã triển khai.
+
+servers:
+  - url: http://localhost:8000
+    description: Local backend
+
+tags:
+  - name: Auth
+  - name: Profile
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: laravel_session
+      description: Session cookie + CSRF (XSRF-TOKEN / X-CSRF-TOKEN) cho SPA
+
+  schemas:
+    User:
+      type: object
+      required: [id, name, email, role, status, is_email_verified]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+          enum: [customer, admin]
+        status:
+          type: string
+          enum: [active, blocked]
+        email_verified_at:
+          type: string
+          format: date-time
+          nullable: true
+        is_email_verified:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    UserResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/User'
+
+    ApiError:
+      type: object
+      properties:
+        message:
+          type: string
+        code:
+          type: string
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+
+paths:
+  /sanctum/csrf-cookie:
+    get:
+      tags: [Auth]
+      summary: Khởi tạo CSRF cookie cho SPA
+      responses:
+        '204':
+          description: No Content
+
+  /register:
+    post:
+      tags: [Auth]
+      summary: Đăng ký tài khoản customer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email, password, password_confirmation]
+              properties:
+                name:
+                  type: string
+                  maxLength: 120
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  minLength: 8
+                password_confirmation:
+                  type: string
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+  /login:
+    post:
+      tags: [Auth]
+      summary: Đăng nhập
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '422':
+          description: Invalid credentials / blocked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '429':
+          description: Too many attempts
+
+  /logout:
+    post:
+      tags: [Auth]
+      summary: Đăng xuất
+      security:
+        - cookieAuth: []
+      responses:
+        '204':
+          description: No Content
+        '401':
+          description: Unauthenticated
+
+  /forgot-password:
+    post:
+      tags: [Auth]
+      summary: Gửi email đặt lại mật khẩu
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email:
+                  type: string
+                  format: email
+      responses:
+        '200':
+          description: Generic success message
+
+  /reset-password:
+    post:
+      tags: [Auth]
+      summary: Đặt lại mật khẩu
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, token, password, password_confirmation]
+              properties:
+                email:
+                  type: string
+                token:
+                  type: string
+                password:
+                  type: string
+                password_confirmation:
+                  type: string
+      responses:
+        '200':
+          description: Password reset
+        '422':
+          description: Invalid token
+
+  /email/verify/{id}/{hash}:
+    get:
+      tags: [Auth]
+      summary: Xác minh email (signed URL)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: hash
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '302':
+          description: Redirect tới `{FRONTEND_URL}/email-verified?status=...`
+
+  /email/verification-notification:
+    post:
+      tags: [Auth]
+      summary: Gửi lại email xác minh
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: OK
+        '429':
+          description: Throttled
+
+  /api/v1/me:
+    get:
+      tags: [Profile]
+      summary: Thông tin user hiện tại
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Blocked
+    patch:
+      tags: [Profile]
+      summary: Cập nhật profile
+      security:
+        - cookieAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                  format: email
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+
+  /api/v1/me/password:
+    patch:
+      tags: [Profile]
+      summary: Đổi mật khẩu
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [current_password, password, password_confirmation]
+              properties:
+                current_password:
+                  type: string
+                password:
+                  type: string
+                password_confirmation:
+                  type: string
+      responses:
+        '200':
+          description: OK
+
+  /api/v1/checkout-probe:
+    post:
+      tags: [Auth]
+      summary: Endpoint mẫu yêu cầu email verified
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Verified user
+        '403':
+          description: Email chưa xác minh
