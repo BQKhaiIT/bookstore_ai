@@ -20,12 +20,18 @@ auth.json
 
 # 2. CURSOR & AI CODING TOOLS
 .cursor/
+.cursor/mcp.json
 .cursorrules
 .cursorignore
 .cursorindexingignore
 .claude/
 .aider*
 *.code-workspace
+
+# Serena generated data
+.serena/cache/
+.serena/memories/
+.serena/project.local.yml
 
 # 3. UI TEMPLATES / REFERENCES
 coreui-free-vue-admin-template-main/
