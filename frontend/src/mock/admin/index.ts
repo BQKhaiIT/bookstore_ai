@@ -72,6 +72,11 @@ export function getMockAdminApi() {
     async fetchCategories(params: ListParams): Promise<PaginatedResponse<Category>> {
       return paginate(mockState.categories, params)
     },
+    async fetchCategory(id: number): Promise<Category> {
+      const category = mockState.categories.find((c) => c.id === id)
+      if (!category) throw new Error('Not found')
+      return category
+    },
     async createCategory(payload: { name: string }): Promise<Category> {
       const id = Math.max(0, ...mockState.categories.map((c) => c.id)) + 1
       const cat = { id, name: payload.name, slug: payload.name.toLowerCase() }
@@ -89,6 +94,11 @@ export function getMockAdminApi() {
     async fetchAuthors(params: ListParams): Promise<PaginatedResponse<Author>> {
       return paginate(mockState.authors, params)
     },
+    async fetchAuthor(id: number): Promise<Author> {
+      const author = mockState.authors.find((a) => a.id === id)
+      if (!author) throw new Error('Not found')
+      return author
+    },
     async createAuthor(payload: { name: string; biography?: string }): Promise<Author> {
       const id = Math.max(0, ...mockState.authors.map((a) => a.id)) + 1
       const author = { id, ...payload }
@@ -105,6 +115,11 @@ export function getMockAdminApi() {
     },
     async fetchPublishers(params: ListParams): Promise<PaginatedResponse<Publisher>> {
       return paginate(mockState.publishers, params)
+    },
+    async fetchPublisher(id: number): Promise<Publisher> {
+      const publisher = mockState.publishers.find((p) => p.id === id)
+      if (!publisher) throw new Error('Not found')
+      return publisher
     },
     async createPublisher(payload: { name: string }): Promise<Publisher> {
       const id = Math.max(0, ...mockState.publishers.map((p) => p.id)) + 1

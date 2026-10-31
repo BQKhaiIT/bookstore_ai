@@ -31,6 +31,19 @@ class FakeCloudinaryImageService implements CloudinaryImageService
 
     public function uploadCover(UploadedFile $file): array
     {
+        return $this->uploadFake($file, 'bookstore/covers/uploaded');
+    }
+
+    public function uploadBanner(UploadedFile $file): array
+    {
+        return $this->uploadFake($file, 'bookstore/banners/uploaded');
+    }
+
+    /**
+     * @return array{secure_url: string, public_id: string, asset_id: string|null}
+     */
+    private function uploadFake(UploadedFile $file, string $publicId): array
+    {
         if ($this->uploadShouldFail) {
             throw new CloudinaryServiceException(
                 'Cloudinary upload failed.',
@@ -42,8 +55,8 @@ class FakeCloudinaryImageService implements CloudinaryImageService
         $this->uploadedFiles[] = $file;
 
         return [
-            'secure_url' => 'https://res.cloudinary.com/demo/image/upload/v1/bookstore/covers/uploaded.jpg',
-            'public_id' => 'bookstore/covers/uploaded',
+            'secure_url' => 'https://res.cloudinary.com/demo/image/upload/v1/'.$publicId.'.jpg',
+            'public_id' => $publicId,
             'asset_id' => 'asset-uploaded',
         ];
     }

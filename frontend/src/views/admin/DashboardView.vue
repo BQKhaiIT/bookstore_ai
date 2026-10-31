@@ -35,7 +35,8 @@ const cards: {
   icon: typeof cilBook
   format: (v: number) => string
 }[] = [
-  { key: 'revenue', label: 'Doanh thu', icon: cilCreditCard, format: (v) => formatVnd(v) },
+  { key: 'revenue', label: 'Doanh thu thực', icon: cilCreditCard, format: (v) => formatVnd(v) },
+  { key: 'sandbox_revenue', label: 'Doanh thu Sandbox', icon: cilCreditCard, format: (v) => formatVnd(v) },
   { key: 'orders_count', label: 'Tổng đơn hàng', icon: cilCart, format: (v) => String(v) },
   { key: 'pending_orders_count', label: 'Đơn chờ xử lý', icon: cilReload, format: (v) => String(v) },
   { key: 'books_count', label: 'Sách trong kho', icon: cilBook, format: (v) => String(v) },

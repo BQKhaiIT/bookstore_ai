@@ -6,8 +6,9 @@ const auth = useAuthStore()
 </script>
 
 <template>
-  <div v-if="!auth.initialized" class="min-vh-100 d-flex align-items-center justify-content-center">
-    <CSpinner color="primary" />
+  <div v-if="!auth.initialized" class="app-bootstrap-loading" role="status" aria-live="polite">
+    <span class="app-bootstrap-loading__spinner" aria-hidden="true" />
+    <span class="sr-only">Đang tải…</span>
   </div>
   <RouterView v-else />
 </template>

@@ -13,6 +13,16 @@ class CloudinaryMediaController extends Controller
 {
     public function index(Request $request, CloudinaryImageService $cloudinary): JsonResponse
     {
+        $user = $request->user();
+        if ($user === null
+            || (! $user->hasAdminPermission('books') && ! $user->hasAdminPermission('banners'))) {
+            return response()->json([
+                'message' => 'Bạn không có quyền thao tác trên module này.',
+                'code' => 'FORBIDDEN',
+                'errors' => (object) [],
+            ], 403);
+        }
+
         $validator = Validator::make($request->all(), [
             'search' => ['nullable', 'string', 'max:128'],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],

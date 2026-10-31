@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import { computed, reactive, ref } from 'vue'
-import { RouterLink, useRoute, useRouter } from 'vue-router'
-import AuthAlert from '@/components/AuthAlert.vue'
-import PasswordInput from '@/components/PasswordInput.vue'
 import * as authApi from '@/api/auth'
 import { ApiError, firstFieldError } from '@/api/errors'
+import CustomerAuthAlert from '@/components/customer/auth/CustomerAuthAlert.vue'
+import CustomerAuthButton from '@/components/customer/auth/CustomerAuthButton.vue'
+import CustomerAuthCard from '@/components/customer/auth/CustomerAuthCard.vue'
+import CustomerAuthPasswordField from '@/components/customer/auth/CustomerAuthPasswordField.vue'
+import { authFormErrorMessage } from '@/composables/useAuthFormMessage'
 import { validatePassword } from '@/composables/usePasswordRules'
+import { computed, reactive, ref } from 'vue'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 
 const route = useRoute()
 const router = useRouter()
@@ -57,7 +60,7 @@ async function onSubmit(): Promise<void> {
     }, 2000)
   } catch (error) {
     if (error instanceof ApiError) {
-      formError.value = error.message
+      formError.value = authFormErrorMessage(error, error.message)
       fieldErrors.password = firstFieldError(error.errors, 'password')
     } else {
       formError.value = 'Không thể đặt lại mật khẩu.'
@@ -69,49 +72,42 @@ async function onSubmit(): Promise<void> {
 </script>
 
 <template>
-  <CCard class="p-4 shadow-sm border-0">
-    <CCardBody class="d-flex flex-column gap-3">
-      <h1 class="h5 text-center mb-0">Đặt lại mật khẩu</h1>
+  <CustomerAuthCard title="Đặt lại mật khẩu" subtitle="Chọn mật khẩu mới cho tài khoản của bạn.">
+    <CustomerAuthAlert v-if="missingParams" message="Thiếu token hoặc email trong liên kết." variant="warning" />
+    <CustomerAuthAlert v-else-if="formError" :message="formError" />
+    <CustomerAuthAlert v-if="success" :message="success" variant="success" />
 
-      <AuthAlert v-if="missingParams" message="Thiếu token hoặc email trong liên kết." />
-      <AuthAlert v-else-if="formError" :message="formError" />
-      <AuthAlert v-if="success" :message="success" color="success" />
+    <form v-if="!missingParams" class="ca-form" @submit.prevent="onSubmit">
+      <div class="ca-field">
+        <span class="ca-field__label">Email</span>
+        <p class="ca-field__control" aria-readonly="true">{{ email }}</p>
+      </div>
 
-      <CForm v-if="!missingParams" class="row gy-3" @submit.prevent="onSubmit">
-        <CCol :xs="12">
-          <CFormLabel>Email</CFormLabel>
-          <CFormInput :model-value="email" readonly disabled />
-        </CCol>
-        <CCol :xs="12">
-          <PasswordInput
-            id="password"
-            v-model="form.password"
-            label="Mật khẩu mới"
-            autocomplete="new-password"
-            :invalid="Boolean(fieldErrors.password)"
-            :feedback="fieldErrors.password"
-          />
-        </CCol>
-        <CCol :xs="12">
-          <PasswordInput
-            id="password_confirmation"
-            v-model="form.password_confirmation"
-            label="Xác nhận mật khẩu mới"
-            autocomplete="new-password"
-            :invalid="Boolean(fieldErrors.password_confirmation)"
-            :feedback="fieldErrors.password_confirmation"
-          />
-        </CCol>
-        <CCol :xs="12">
-          <CButton color="primary" type="submit" class="w-100" :disabled="submitting">
-            {{ submitting ? 'Đang lưu…' : 'Cập nhật mật khẩu' }}
-          </CButton>
-        </CCol>
-      </CForm>
+      <CustomerAuthPasswordField
+        id="password"
+        v-model="form.password"
+        label="Mật khẩu mới"
+        autocomplete="new-password"
+        :invalid="Boolean(fieldErrors.password)"
+        :error="fieldErrors.password"
+      />
 
-      <p class="text-center small mb-0">
-        <RouterLink to="/login">Quay lại đăng nhập</RouterLink>
-      </p>
-    </CCardBody>
-  </CCard>
+      <CustomerAuthPasswordField
+        id="password_confirmation"
+        v-model="form.password_confirmation"
+        label="Xác nhận mật khẩu mới"
+        autocomplete="new-password"
+        :invalid="Boolean(fieldErrors.password_confirmation)"
+        :error="fieldErrors.password_confirmation"
+      />
+
+      <CustomerAuthButton type="submit" :loading="submitting">
+        {{ submitting ? 'Đang lưu…' : 'Cập nhật mật khẩu' }}
+      </CustomerAuthButton>
+    </form>
+
+    <p class="ca-footer">
+      <RouterLink to="/login">Quay lại đăng nhập</RouterLink>
+    </p>
+  </CustomerAuthCard>
 </template>

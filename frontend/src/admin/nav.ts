@@ -3,6 +3,7 @@ import {
   cilBuilding,
   cilCart,
   cilCreditCard,
+  cilLibrary,
   cilPeople,
   cilLockLocked,
   cilSpeedometer,
@@ -48,6 +49,12 @@ export const adminNavGroups: AdminNavGroup[] = [
     ],
   },
   {
+    title: 'Quản lý giao diện',
+    items: [
+      { name: 'Hero & Banner', to: '/admin/banners', icon: cilLibrary, permission: 'banners' },
+    ],
+  },
+  {
     title: 'Cộng đồng',
     items: [
       { name: 'Người dùng', to: '/admin/users', icon: cilPeople, permission: 'users' },
@@ -82,6 +89,7 @@ export const adminRouteTitles: Record<string, string> = {
   'admin-payments': 'Thanh toán',
   'admin-users': 'Người dùng',
   'admin-reviews': 'Đánh giá',
+  'admin-banners': 'Hero & Banner',
   'admin-staff': 'Quản trị viên',
 }
 

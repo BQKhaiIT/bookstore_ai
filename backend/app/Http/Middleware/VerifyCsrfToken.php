@@ -9,7 +9,9 @@ class VerifyCsrfToken extends PreventRequestForgery
     /**
      * @var array<int, string>
      */
-    protected $except = [];
+    protected $except = [
+        'api/v1/payments/webhooks/sepay',
+    ];
 
     protected function runningUnitTests(): bool
     {

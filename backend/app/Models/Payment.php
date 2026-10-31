@@ -17,9 +17,13 @@ class Payment extends Model
     protected $fillable = [
         'order_id',
         'method',
+        'provider',
+        'environment',
+        'invoice_number',
         'amount',
         'status',
         'transaction_reference',
+        'metadata',
         'paid_at',
     ];
 
@@ -29,6 +33,7 @@ class Payment extends Model
             'method' => PaymentMethod::class,
             'status' => PaymentStatus::class,
             'amount' => 'integer',
+            'metadata' => 'array',
             'paid_at' => 'datetime',
         ];
     }

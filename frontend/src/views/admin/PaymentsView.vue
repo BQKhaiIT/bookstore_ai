@@ -46,6 +46,8 @@ async function onConfirmCod(payment: AdminPayment): Promise<void> {
             <CTableHeaderCell>ID</CTableHeaderCell>
             <CTableHeaderCell>Đơn hàng</CTableHeaderCell>
             <CTableHeaderCell>Phương thức</CTableHeaderCell>
+            <CTableHeaderCell>Cổng / Môi trường</CTableHeaderCell>
+            <CTableHeaderCell>Mã giao dịch</CTableHeaderCell>
             <CTableHeaderCell>Số tiền</CTableHeaderCell>
             <CTableHeaderCell>Trạng thái</CTableHeaderCell>
             <CTableHeaderCell>Ngày tạo</CTableHeaderCell>
@@ -54,12 +56,18 @@ async function onConfirmCod(payment: AdminPayment): Promise<void> {
         </CTableHead>
         <CTableBody>
           <CTableRow v-if="!items.length">
-            <CTableDataCell colspan="7" class="text-center text-body-secondary py-4">Không có giao dịch.</CTableDataCell>
+            <CTableDataCell colspan="9" class="text-center text-body-secondary py-4">Không có giao dịch.</CTableDataCell>
           </CTableRow>
           <CTableRow v-for="p in items" :key="p.id">
             <CTableDataCell>#{{ p.id }}</CTableDataCell>
             <CTableDataCell>#{{ p.order_id }}</CTableDataCell>
             <CTableDataCell>{{ String(p.method).toUpperCase() }}</CTableDataCell>
+            <CTableDataCell>
+              <span v-if="p.provider">{{ p.provider }}</span>
+              <span v-else class="text-body-secondary">—</span>
+              <span v-if="p.environment" class="text-body-secondary"> / {{ p.environment }}</span>
+            </CTableDataCell>
+            <CTableDataCell>{{ p.transaction_reference || '—' }}</CTableDataCell>
             <CTableDataCell>{{ formatVnd(p.amount) }}</CTableDataCell>
             <CTableDataCell><StatusBadge kind="payment" :value="p.status" /></CTableDataCell>
             <CTableDataCell>{{ formatDateTime(p.created_at) }}</CTableDataCell>

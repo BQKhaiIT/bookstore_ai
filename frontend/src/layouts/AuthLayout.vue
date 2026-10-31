@@ -1,21 +1,31 @@
 <script setup lang="ts">
-import { RouterView } from 'vue-router'
+import '@/assets/styles/customer-auth.css'
+import { RouterLink, RouterView } from 'vue-router'
 </script>
 
 <template>
-  <div class="bg-body-tertiary min-vh-100 d-flex flex-row align-items-center py-4">
-    <CContainer>
-      <CRow class="justify-content-center">
-        <CCol :md="8" :lg="6" :xl="5">
-          <div class="d-flex flex-column gap-3 mb-3 text-center">
-            <div class="auth-brand-title fs-3">BookStore AI</div>
-            <p class="auth-subtitle mb-0 small">
-              Nền tảng mua sách thông minh — đăng nhập để tiếp tục
-            </p>
+  <div class="customer-auth">
+    <div class="customer-auth__grid">
+      <aside class="customer-auth__hero" aria-hidden="true">
+        <div>
+          <p class="customer-auth__hero-mark">BookStore</p>
+          <p class="customer-auth__hero-tagline">
+            Đăng nhập để lưu yêu thích, giỏ hàng và theo dõi đơn hàng của bạn.
+          </p>
+        </div>
+        <p class="customer-auth__hero-quote">“Một cuốn sách hay là người bạn đồng hành lý trí mỗi ngày.”</p>
+      </aside>
+
+      <main class="customer-auth__main">
+        <div class="customer-auth__main-inner">
+          <div class="customer-auth__mobile-brand">
+            <RouterLink to="/login" class="customer-auth__hero-mark text-decoration-none">
+              BookStore
+            </RouterLink>
           </div>
           <RouterView />
-        </CCol>
-      </CRow>
-    </CContainer>
+        </div>
+      </main>
+    </div>
   </div>
 </template>

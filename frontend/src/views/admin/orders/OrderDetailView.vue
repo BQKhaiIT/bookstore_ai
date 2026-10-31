@@ -140,6 +140,15 @@ const address = computed(() => order.value?.shipping_address_snapshot)
           <CCardBody>
             <StatusBadge kind="payment" :value="order.payment.status" />
             <div class="mt-2">{{ formatVnd(order.payment.amount) }} — {{ order.payment.method?.toUpperCase() }}</div>
+            <div v-if="order.payment.provider" class="mt-1 text-body-secondary small">
+              {{ order.payment.provider }} / {{ order.payment.environment || '—' }}
+            </div>
+            <div v-if="order.payment.transaction_reference" class="mt-1 small">
+              Mã GD: {{ order.payment.transaction_reference }}
+            </div>
+            <div v-if="order.payment.paid_at" class="mt-1 small text-body-secondary">
+              Paid at: {{ formatDateTime(order.payment.paid_at) }}
+            </div>
           </CCardBody>
         </CCard>
       </CCol>

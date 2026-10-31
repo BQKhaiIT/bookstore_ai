@@ -5,5 +5,6 @@ return [
     'api_key' => env('CLOUDINARY_API_KEY'),
     'api_secret' => env('CLOUDINARY_API_SECRET'),
     'upload_folder' => env('CLOUDINARY_UPLOAD_FOLDER', 'bookstore/covers'),
+    'banner_upload_folder' => env('CLOUDINARY_BANNER_UPLOAD_FOLDER', 'bookstore/banners'),
     'ca_bundle' => env('CLOUDINARY_CA_BUNDLE'),
 ];

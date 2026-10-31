@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AuthorController;
+use App\Http\Controllers\Admin\BannerController;
 use App\Http\Controllers\Admin\BookController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CloudinaryMediaController;
@@ -14,6 +15,8 @@ use App\Http\Controllers\Admin\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth:sanctum', 'active', 'verified', 'admin'])->group(function (): void {
+    Route::get('/cloudinary/images', [CloudinaryMediaController::class, 'index']);
+
     Route::middleware('permission:dashboard')->get('/dashboard', [DashboardController::class, 'show']);
 
     Route::middleware('super_admin')->prefix('staff')->group(function (): void {
@@ -25,11 +28,10 @@ Route::middleware(['auth:sanctum', 'active', 'verified', 'admin'])->group(functi
     });
 
     Route::middleware('permission:books')->group(function (): void {
-        Route::get('/cloudinary/images', [CloudinaryMediaController::class, 'index']);
-        Route::post('/books/{book}/cover', [BookController::class, 'uploadCover']);
-        Route::put('/books/{book}/cover', [BookController::class, 'assignCover']);
-        Route::delete('/books/{book}/cover', [BookController::class, 'removeCover']);
-        Route::apiResource('books', BookController::class);
+        Route::post('/books/{book:id}/cover', [BookController::class, 'uploadCover']);
+        Route::put('/books/{book:id}/cover', [BookController::class, 'assignCover']);
+        Route::delete('/books/{book:id}/cover', [BookController::class, 'removeCover']);
+        Route::apiResource('books', BookController::class)->parameters(['books' => 'book:id']);
     });
 
     Route::middleware('permission:categories')->apiResource('categories', CategoryController::class);
@@ -55,5 +57,10 @@ Route::middleware(['auth:sanctum', 'active', 'verified', 'admin'])->group(functi
     Route::middleware('permission:reviews')->group(function (): void {
         Route::get('/reviews', [ReviewController::class, 'index']);
         Route::patch('/reviews/{review}', [ReviewController::class, 'update']);
+    });
+
+    Route::middleware('permission:banners')->group(function (): void {
+        Route::post('/banners/{banner:id}/image', [BannerController::class, 'uploadImage']);
+        Route::apiResource('banners', BannerController::class)->parameters(['banners' => 'banner:id']);
     });
 });

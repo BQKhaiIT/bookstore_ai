@@ -1,8 +1,11 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
-import { RouterLink, useRoute, useRouter } from 'vue-router'
+import CustomerAuthAlert from '@/components/customer/auth/CustomerAuthAlert.vue'
+import CustomerAuthButton from '@/components/customer/auth/CustomerAuthButton.vue'
+import CustomerAuthCard from '@/components/customer/auth/CustomerAuthCard.vue'
 import { useAuthStore } from '@/stores/auth'
 import { resolvePostAuthRoute } from '@/utils/navigation'
+import { computed, onMounted, ref } from 'vue'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 
 const route = useRoute()
 const router = useRouter()
@@ -16,20 +19,20 @@ const content = computed(() => {
     case 'success':
       return {
         title: 'Xác minh email thành công',
-        body: 'Tài khoản của bạn đã được xác minh. Bạn có thể tiếp tục sử dụng BookStore AI.',
-        color: 'success' as const,
+        body: 'Tài khoản của bạn đã được xác minh. Bạn có thể tiếp tục sử dụng BookStore.',
+        variant: 'success' as const,
       }
     case 'already':
       return {
         title: 'Email đã được xác minh',
         body: 'Tài khoản này đã xác minh email trước đó.',
-        color: 'info' as const,
+        variant: 'info' as const,
       }
     default:
       return {
         title: 'Liên kết không hợp lệ',
         body: 'Liên kết xác minh hết hạn hoặc không hợp lệ. Hãy đăng nhập và gửi lại email xác minh.',
-        color: 'warning' as const,
+        variant: 'warning' as const,
       }
   }
 })
@@ -58,23 +61,27 @@ async function continueApp(): Promise<void> {
 </script>
 
 <template>
-  <CCard class="p-4 shadow-sm border-0">
-    <CCardBody class="d-flex flex-column gap-3 text-center">
-      <h1 class="h5 mb-0">{{ content.title }}</h1>
-      <CAlert :color="content.color" class="text-start mb-0">
-        {{ content.body }}
-      </CAlert>
-      <div class="d-grid gap-2">
-        <CButton color="primary" :disabled="syncing" @click="continueApp">
-          {{ syncing ? 'Đang đồng bộ…' : 'Tiếp tục' }}
-        </CButton>
-        <RouterLink v-if="!auth.isAuthenticated" to="/login" class="btn btn-outline-secondary">
-          Đăng nhập
-        </RouterLink>
-        <RouterLink v-else-if="!auth.isVerified" to="/verify-email" class="btn btn-outline-secondary">
-          Trang xác minh email
-        </RouterLink>
-      </div>
-    </CCardBody>
-  </CCard>
+  <CustomerAuthCard :title="content.title">
+    <CustomerAuthAlert :message="content.body" :variant="content.variant" />
+
+    <div class="ca-stack">
+      <CustomerAuthButton :loading="syncing" @click="continueApp">
+        {{ syncing ? 'Đang đồng bộ…' : 'Tiếp tục' }}
+      </CustomerAuthButton>
+      <RouterLink
+        v-if="!auth.isAuthenticated"
+        to="/login"
+        class="ca-btn ca-btn--secondary text-decoration-none"
+      >
+        Đăng nhập
+      </RouterLink>
+      <RouterLink
+        v-else-if="!auth.isVerified"
+        to="/verify-email"
+        class="ca-btn ca-btn--secondary text-decoration-none"
+      >
+        Trang xác minh email
+      </RouterLink>
+    </div>
+  </CustomerAuthCard>
 </template>

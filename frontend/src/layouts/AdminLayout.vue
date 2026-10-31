@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import '@/assets/styles/admin-coreui.css'
 import ConfirmModal from '@/components/admin/ConfirmModal.vue'
 import ToastContainer from '@/components/admin/ToastContainer.vue'
 import AdminHeader from '@/layouts/admin/AdminHeader.vue'

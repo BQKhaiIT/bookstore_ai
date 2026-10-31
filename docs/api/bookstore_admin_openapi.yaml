@@ -317,3 +317,45 @@ paths:
       responses:
         '200':
           description: OK
+
+  /banners:
+    get:
+      tags: [Admin]
+      summary: Danh sách Hero/Banner (permission banners)
+      responses:
+        '200':
+          description: OK
+    post:
+      tags: [Admin]
+      summary: Tạo banner
+      responses:
+        '201':
+          description: Created
+
+  /banners/{id}:
+    get:
+      tags: [Admin]
+      summary: Chi tiết banner
+      responses:
+        '200':
+          description: OK
+    patch:
+      tags: [Admin]
+      summary: Cập nhật banner
+      responses:
+        '200':
+          description: OK
+    delete:
+      tags: [Admin]
+      summary: Xóa banner
+      responses:
+        '204':
+          description: No Content
+
+  /banners/{id}/image:
+    post:
+      tags: [Admin]
+      summary: Upload/gán ảnh desktop hoặc mobile (multipart variant + image|public_id)
+      responses:
+        '200':
+          description: OK

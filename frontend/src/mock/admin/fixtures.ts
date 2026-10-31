@@ -150,6 +150,7 @@ const reviews: AdminReview[] = [
 
 const dashboard: DashboardStats = {
   revenue: 229000,
+  sandbox_revenue: 0,
   orders_count: 2,
   books_count: 2,
   customers_count: 2,

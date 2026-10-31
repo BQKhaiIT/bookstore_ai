@@ -1,12 +1,16 @@
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
-import { RouterLink, useRoute, useRouter } from 'vue-router'
-import AuthAlert from '@/components/AuthAlert.vue'
-import PasswordInput from '@/components/PasswordInput.vue'
+import CustomerAuthAlert from '@/components/customer/auth/CustomerAuthAlert.vue'
+import CustomerAuthButton from '@/components/customer/auth/CustomerAuthButton.vue'
+import CustomerAuthCard from '@/components/customer/auth/CustomerAuthCard.vue'
+import CustomerAuthField from '@/components/customer/auth/CustomerAuthField.vue'
+import CustomerAuthPasswordField from '@/components/customer/auth/CustomerAuthPasswordField.vue'
 import { ApiError, firstFieldError } from '@/api/errors'
+import { authFormErrorMessage } from '@/composables/useAuthFormMessage'
 import { validateEmail } from '@/composables/usePasswordRules'
 import { useAuthStore } from '@/stores/auth'
-import { resolvePostCustomerAuthRoute } from '@/utils/navigation'
+import { resolvePostAuthRoute } from '@/utils/navigation'
+import { reactive, ref } from 'vue'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -48,17 +52,14 @@ async function onSubmit(): Promise<void> {
     if (!auth.user) {
       return
     }
-    await router.replace(resolvePostCustomerAuthRoute(auth.user, route.query.redirect))
+    await router.replace(resolvePostAuthRoute(auth.user, route.query.redirect))
   } catch (error) {
-    if (error instanceof ApiError) {
-      formError.value = error.message
-      fieldErrors.email = firstFieldError(error.errors, 'email')
-      if (error.code === 'ACCOUNT_BLOCKED') {
-        formError.value = 'Tài khoản của bạn đã bị khóa.'
-      }
+    if (error instanceof ApiError && error.code === 'ACCOUNT_BLOCKED') {
+      formError.value = 'Tài khoản của bạn đã bị khóa.'
     } else {
-      formError.value = 'Không thể đăng nhập. Vui lòng thử lại.'
+      formError.value = authFormErrorMessage(error, 'Không thể đăng nhập. Vui lòng thử lại.')
     }
+    fieldErrors.email = error instanceof ApiError ? firstFieldError(error.errors, 'email') : undefined
   } finally {
     submitting.value = false
   }
@@ -66,62 +67,47 @@ async function onSubmit(): Promise<void> {
 </script>
 
 <template>
-  <CCard class="p-4 shadow-sm border-0">
-    <CCardBody class="d-flex flex-column gap-3">
-      <h1 class="h5 text-center mb-0">Đăng nhập</h1>
+  <CustomerAuthCard title="Đăng nhập" subtitle="Chào mừng trở lại — tiếp tục hành trình đọc của bạn.">
+    <CustomerAuthAlert v-if="formError" :message="formError" />
 
-      <AuthAlert v-if="formError" :message="formError" />
+    <form class="ca-form" @submit.prevent="onSubmit">
+      <CustomerAuthField
+        id="email"
+        v-model="form.email"
+        label="Email"
+        type="email"
+        autocomplete="email"
+        :invalid="Boolean(fieldErrors.email)"
+        :error="fieldErrors.email"
+      />
 
-      <CForm class="row gy-3" @submit.prevent="onSubmit">
-        <CCol :xs="12">
-          <CFormLabel for="email">Email</CFormLabel>
-          <CFormInput
-            id="email"
-            v-model="form.email"
-            type="email"
-            autocomplete="email"
-            :invalid="Boolean(fieldErrors.email)"
-            :aria-describedby="fieldErrors.email ? 'email-feedback' : undefined"
-          />
-          <CFormFeedback v-if="fieldErrors.email" id="email-feedback" invalid>
-            {{ fieldErrors.email }}
-          </CFormFeedback>
-        </CCol>
+      <div>
+        <div class="ca-link-row">
+          <RouterLink to="/forgot-password">Quên mật khẩu?</RouterLink>
+        </div>
+        <CustomerAuthPasswordField
+          id="password"
+          v-model="form.password"
+          label="Mật khẩu"
+          autocomplete="current-password"
+          :invalid="Boolean(fieldErrors.password)"
+          :error="fieldErrors.password"
+        />
+      </div>
 
-        <CCol :xs="12">
-          <div class="d-flex justify-content-between align-items-center">
-            <span />
-            <RouterLink to="/forgot-password" class="small">Quên mật khẩu?</RouterLink>
-          </div>
-          <PasswordInput
-            id="password"
-            v-model="form.password"
-            label="Mật khẩu"
-            autocomplete="current-password"
-            :invalid="Boolean(fieldErrors.password)"
-            :feedback="fieldErrors.password"
-          />
-        </CCol>
+      <label class="ca-check">
+        <input v-model="form.remember" type="checkbox" />
+        <span>Ghi nhớ đăng nhập trên thiết bị này</span>
+      </label>
 
-        <CCol :xs="12">
-          <CFormCheck
-            id="remember"
-            v-model="form.remember"
-            label="Ghi nhớ đăng nhập trên thiết bị này"
-          />
-        </CCol>
+      <CustomerAuthButton type="submit" :loading="submitting">
+        {{ submitting ? 'Đang xử lý…' : 'Đăng nhập' }}
+      </CustomerAuthButton>
+    </form>
 
-        <CCol :xs="12">
-          <CButton color="primary" type="submit" class="w-100" :disabled="submitting">
-            {{ submitting ? 'Đang xử lý…' : 'Đăng nhập' }}
-          </CButton>
-        </CCol>
-      </CForm>
-
-      <p class="text-center small mb-0">
-        Chưa có tài khoản?
-        <RouterLink to="/register">Đăng ký</RouterLink>
-      </p>
-    </CCardBody>
-  </CCard>
+    <p class="ca-footer">
+      Chưa có tài khoản?
+      <RouterLink to="/register">Đăng ký</RouterLink>
+    </p>
+  </CustomerAuthCard>
 </template>

@@ -13,6 +13,7 @@ servers:
 tags:
   - name: Auth
   - name: Profile
+  - name: Storefront
 
 components:
   securitySchemes:
@@ -301,6 +302,62 @@ paths:
         '200':
           description: OK
 
+  /api/v1/payments/webhooks/sepay:
+    post:
+      tags: [Payments]
+      summary: SePay IPN (public, X-Secret-Key)
+      responses:
+        '200':
+          description: Đã xử lý
+        '401':
+          description: Secret không hợp lệ
+
+  /api/v1/checkout/preview:
+    get:
+      tags: [Checkout]
+      summary: Xem trước checkout (kèm payment_methods)
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: OK
+
+  /api/v1/checkout:
+    post:
+      tags: [Checkout]
+      summary: Đặt hàng (COD hoặc sandbox_online)
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: header
+          name: Idempotency-Key
+          required: true
+          schema:
+            type: string
+      responses:
+        '201':
+          description: Created
+
+  /api/v1/orders/{orderId}/payment:
+    get:
+      tags: [Payments]
+      summary: Trạng thái thanh toán đơn hàng
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: OK
+
+  /api/v1/orders/{orderId}/payment-sessions:
+    post:
+      tags: [Payments]
+      summary: Tạo form checkout SePay Sandbox đã ký
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: OK
+
   /api/v1/checkout-probe:
     post:
       tags: [Auth]
@@ -312,3 +369,11 @@ paths:
           description: Verified user
         '403':
           description: Email chưa xác minh
+
+  /api/v1/banners:
+    get:
+      tags: [Storefront]
+      summary: Hero/Banner active cho customer (sort_order, lịch hiển thị)
+      responses:
+        '200':
+          description: OK

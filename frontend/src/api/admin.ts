@@ -1,5 +1,6 @@
 import { api, ensureCsrfCookie } from '@/api/client'
 import type {
+  AdminBanner,
   AdminBook,
   AdminOrder,
   AdminPayment,
@@ -134,6 +135,16 @@ export async function fetchCategories(params: ListParams = {}): Promise<Paginate
   )
 }
 
+export async function fetchCategory(id: number): Promise<Category> {
+  return delegate(
+    async () => {
+      const { data } = await api.get<{ data: Category }>(`${prefix}/categories/${id}`)
+      return data.data
+    },
+    () => getMockAdminApi().fetchCategory(id),
+  )
+}
+
 export async function createCategory(payload: { name: string; slug?: string }): Promise<Category> {
   return delegate(
     async () => {
@@ -170,6 +181,16 @@ export async function fetchAuthors(params: ListParams = {}): Promise<PaginatedRe
   )
 }
 
+export async function fetchAuthor(id: number): Promise<Author> {
+  return delegate(
+    async () => {
+      const { data } = await api.get<{ data: Author }>(`${prefix}/authors/${id}`)
+      return data.data
+    },
+    () => getMockAdminApi().fetchAuthor(id),
+  )
+}
+
 export async function createAuthor(payload: { name: string; biography?: string }): Promise<Author> {
   return delegate(
     async () => {
@@ -203,6 +224,16 @@ export async function fetchPublishers(params: ListParams = {}): Promise<Paginate
   return delegate(
     () => getPaginated<Publisher>('/publishers', params),
     () => getMockAdminApi().fetchPublishers(params),
+  )
+}
+
+export async function fetchPublisher(id: number): Promise<Publisher> {
+  return delegate(
+    async () => {
+      const { data } = await api.get<{ data: Publisher }>(`${prefix}/publishers/${id}`)
+      return data.data
+    },
+    () => getMockAdminApi().fetchPublisher(id),
   )
 }
 
@@ -369,4 +400,44 @@ export async function updateStaffStatus(userId: number, status: 'active' | 'bloc
 
 export async function cancelStaffInvitation(id: number): Promise<void> {
   await api.delete(`${prefix}/staff/invitations/${id}`)
+}
+
+export async function fetchBanners(params: ListParams = {}): Promise<PaginatedResponse<AdminBanner>> {
+  return getPaginated<AdminBanner>('/banners', params)
+}
+
+export async function fetchBanner(id: number): Promise<AdminBanner> {
+  const { data } = await api.get<{ data: AdminBanner }>(`${prefix}/banners/${id}`)
+  return data.data
+}
+
+export async function createBanner(payload: Record<string, unknown>): Promise<AdminBanner> {
+  const { data } = await api.post<{ data: AdminBanner }>(`${prefix}/banners`, payload)
+  return data.data
+}
+
+export async function updateBanner(id: number, payload: Record<string, unknown>): Promise<AdminBanner> {
+  const { data } = await api.patch<{ data: AdminBanner }>(`${prefix}/banners/${id}`, payload)
+  return data.data
+}
+
+export async function deleteBanner(id: number): Promise<void> {
+  await api.delete(`${prefix}/banners/${id}`)
+}
+
+export async function uploadBannerImage(
+  bannerId: number,
+  variant: 'desktop' | 'mobile',
+  file?: File,
+  publicId?: string,
+): Promise<AdminBanner> {
+  await ensureCsrfCookie()
+  const form = new FormData()
+  form.set('variant', variant)
+  if (file) form.set('image', file)
+  if (publicId) form.set('public_id', publicId)
+  const { data } = await api.post<{ data: AdminBanner }>(`${prefix}/banners/${bannerId}/image`, form, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
+  return data.data
 }

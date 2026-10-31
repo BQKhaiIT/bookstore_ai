@@ -17,10 +17,19 @@ export class ApiError extends Error {
 export function parseApiError(error: unknown): ApiError {
   if (axios.isAxiosError(error) && error.response) {
     const body = (error.response.data ?? {}) as ApiErrorBody
-    return new ApiError(error.response.status, body)
+    const message =
+      typeof body.message === 'string' && body.message
+        ? body.message
+        : error.response.status >= 500
+          ? 'Máy chủ gặp lỗi (thường do gửi email). Thử đăng nhập hoặc gửi lại email xác minh.'
+          : 'Không thể kết nối máy chủ.'
+    return new ApiError(error.response.status, { ...body, message })
   }
 
-  return new ApiError(0, { message: 'Không thể kết nối máy chủ.' })
+  return new ApiError(0, {
+    message:
+      'Không thể kết nối máy chủ. Kiểm tra Laravel đang chạy (php artisan serve) và VITE_API_BASE_URL.',
+  })
 }
 
 export function firstFieldError(errors: Record<string, string[]>, field: string): string | undefined {

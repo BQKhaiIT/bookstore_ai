@@ -90,6 +90,7 @@ export const adminPermissionLabel: Record<string, string> = {
   payments: 'Thanh toán',
   reviews: 'Đánh giá',
   users: 'Người dùng',
+  banners: 'Hero & Banner',
 }
 
 export function permissionLabel(key: string): string {

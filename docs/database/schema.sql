@@ -184,10 +184,14 @@ CREATE TABLE payments (
     order_id                BIGINT NOT NULL REFERENCES orders(id) ON DELETE RESTRICT,
     method                  VARCHAR(20) NOT NULL DEFAULT 'cod'
                             CHECK (method IN ('cod', 'sandbox_online')),
+    provider                VARCHAR(30),
+    environment             VARCHAR(20),
+    invoice_number          VARCHAR(64) UNIQUE,
     amount                  BIGINT NOT NULL CHECK (amount >= 0),
     status                  VARCHAR(20) NOT NULL DEFAULT 'pending'
                             CHECK (status IN ('pending', 'paid', 'failed', 'refunded')),
     transaction_reference   VARCHAR(150),
+    metadata                JSONB,
     paid_at                 TIMESTAMPTZ,
     created_at              TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at              TIMESTAMPTZ NOT NULL DEFAULT NOW()

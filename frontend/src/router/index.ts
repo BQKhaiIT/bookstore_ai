@@ -1,31 +1,95 @@
 import { adminActivateRoute, adminLoginRoute, adminProtectedRoutes } from '@/router/adminRoutes'
 import { evaluateAuthGuard, shouldProbeSessionOnBootstrap } from '@/router/authGuards'
+import { customerScrollBehavior } from '@/router/scrollBehavior'
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
+  scrollBehavior: customerScrollBehavior,
   routes: [
     {
       path: '/',
-      component: () => import('@/layouts/AppLayout.vue'),
-      meta: { requiresAuth: true },
+      component: () => import('@/layouts/customer/CustomerLayout.vue'),
       children: [
         {
           path: '',
           name: 'home',
-          component: () => import('@/views/HomeView.vue'),
+          component: () => import('@/views/customer/HomeView.vue'),
+        },
+        {
+          path: 'books',
+          name: 'books',
+          component: () => import('@/views/customer/BooksCatalogView.vue'),
+        },
+        {
+          path: 'books/:slug',
+          name: 'book-detail',
+          component: () => import('@/views/customer/BookDetailView.vue'),
+        },
+        {
+          path: 'cart',
+          name: 'cart',
+          meta: { requiresAuth: true },
+          component: () => import('@/views/customer/CartView.vue'),
+        },
+        {
+          path: 'checkout',
+          name: 'checkout',
+          meta: { requiresAuth: true, requiresVerified: true },
+          component: () => import('@/views/customer/CheckoutView.vue'),
+        },
+        {
+          path: 'orders',
+          name: 'orders',
+          meta: { requiresAuth: true },
+          component: () => import('@/views/customer/OrdersListView.vue'),
+        },
+        {
+          path: 'orders/:id',
+          name: 'order-detail',
+          meta: { requiresAuth: true },
+          component: () => import('@/views/customer/OrderDetailView.vue'),
+        },
+        {
+          path: 'orders/:id/payment',
+          name: 'order-payment',
+          meta: { requiresAuth: true, requiresVerified: true },
+          component: () => import('@/views/customer/OrderPaymentView.vue'),
+        },
+        {
+          path: 'wishlist',
+          name: 'wishlist',
+          meta: { requiresAuth: true },
+          component: () => import('@/views/customer/WishlistView.vue'),
         },
         {
           path: 'account',
-          name: 'account',
-          component: () => import('@/views/account/AccountView.vue'),
+          meta: { requiresAuth: true },
+          component: () => import('@/views/customer/account/AccountShellView.vue'),
+          children: [
+            { path: '', redirect: { name: 'account-profile' } },
+            {
+              path: 'profile',
+              name: 'account-profile',
+              component: () => import('@/views/customer/account/ProfileView.vue'),
+            },
+            {
+              path: 'addresses',
+              name: 'account-addresses',
+              component: () => import('@/views/customer/account/AddressesView.vue'),
+            },
+            {
+              path: 'security',
+              name: 'account-security',
+              component: () => import('@/views/customer/account/SecurityView.vue'),
+            },
+          ],
         },
         {
           path: 'forbidden',
           name: 'forbidden',
           component: () => import('@/views/ForbiddenView.vue'),
-          meta: { requiresAuth: true },
         },
       ],
     },

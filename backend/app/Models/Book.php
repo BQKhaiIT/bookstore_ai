@@ -62,4 +62,9 @@ class Book extends Model
     {
         return $this->hasMany(Review::class);
     }
+
+    public function getRouteKeyName(): string
+    {
+        return 'slug';
+    }
 }

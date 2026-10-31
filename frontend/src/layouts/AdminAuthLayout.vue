@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import '@/assets/styles/admin-coreui.css'
 import { RouterView } from 'vue-router'
 </script>
 

@@ -1,10 +1,13 @@
 <script setup lang="ts">
+import * as authApi from '@/api/auth'
+import CustomerAuthAlert from '@/components/customer/auth/CustomerAuthAlert.vue'
+import CustomerAuthButton from '@/components/customer/auth/CustomerAuthButton.vue'
+import CustomerAuthCard from '@/components/customer/auth/CustomerAuthCard.vue'
+import { authFormErrorMessage } from '@/composables/useAuthFormMessage'
+import { useAuthStore } from '@/stores/auth'
+import { resolvePostAuthRoute } from '@/utils/navigation'
 import { ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
-import AuthAlert from '@/components/AuthAlert.vue'
-import * as authApi from '@/api/auth'
-import { ApiError } from '@/api/errors'
-import { useAuthStore } from '@/stores/auth'
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -20,8 +23,7 @@ async function resend(): Promise<void> {
   try {
     message.value = await authApi.resendVerificationEmail()
   } catch (err) {
-    error.value =
-      err instanceof ApiError ? err.message : 'Không thể gửi lại email xác minh.'
+    error.value = authFormErrorMessage(err, 'Không thể gửi lại email xác minh.')
   } finally {
     submitting.value = false
   }
@@ -32,50 +34,42 @@ async function refreshStatus(): Promise<void> {
   try {
     const user = await auth.refreshUser()
     if (user?.is_email_verified) {
-      await router.push({ name: 'home' })
+      await router.push(resolvePostAuthRoute(user))
     } else {
       message.value = 'Email vẫn chưa được xác minh. Vui lòng kiểm tra hộp thư.'
     }
   } catch (err) {
-    error.value = err instanceof ApiError ? err.message : 'Không thể tải trạng thái tài khoản.'
+    error.value = authFormErrorMessage(err, 'Không thể tải trạng thái tài khoản.')
   } finally {
     submitting.value = false
   }
 }
+
+async function logout(): Promise<void> {
+  await auth.logout()
+  await router.push({ name: 'login' })
+}
 </script>
 
 <template>
-  <CCard class="p-4 shadow-sm border-0">
-    <CCardBody class="d-flex flex-column gap-3">
-      <h1 class="h5 text-center mb-0">Xác minh email</h1>
-      <p class="small text-body-secondary mb-0 text-center">
-        Chúng tôi đã gửi liên kết xác minh tới
-        <strong>{{ auth.user?.email }}</strong
-        >. Mở email và nhấn liên kết để kích hoạt tài khoản.
-      </p>
+  <CustomerAuthCard
+    title="Xác minh email"
+    :subtitle="`Liên kết đã gửi tới ${auth.user?.email ?? 'email của bạn'}. Mở hộp thư và xác minh để tiếp tục.`"
+  >
 
-      <AuthAlert v-if="error" :message="error" />
-      <AuthAlert v-if="message" :message="message" color="success" />
+    <CustomerAuthAlert v-if="error" :message="error" />
+    <CustomerAuthAlert v-if="message" :message="message" variant="success" />
 
-      <div class="d-grid gap-2">
-        <CButton color="primary" :disabled="submitting" @click="resend">
-          {{ submitting ? 'Đang gửi…' : 'Gửi lại email xác minh' }}
-        </CButton>
-        <CButton color="secondary" variant="outline" :disabled="submitting" @click="refreshStatus">
-          Tôi đã xác minh — kiểm tra lại
-        </CButton>
-        <CButton
-          color="link"
-          class="text-decoration-none"
-          @click="async () => { await auth.logout(); await router.push({ name: 'login' }) }"
-        >
-          Đăng xuất
-        </CButton>
-      </div>
+    <div class="ca-stack">
+      <CustomerAuthButton :loading="submitting" @click="resend">Gửi lại email xác minh</CustomerAuthButton>
+      <CustomerAuthButton variant="secondary" :loading="submitting" @click="refreshStatus">
+        Tôi đã xác minh — kiểm tra lại
+      </CustomerAuthButton>
+      <CustomerAuthButton variant="ghost" @click="logout">Đăng xuất</CustomerAuthButton>
+    </div>
 
-      <p class="text-center small mb-0">
-        <RouterLink to="/">Về trang chủ</RouterLink>
-      </p>
-    </CCardBody>
-  </CCard>
+    <p class="ca-footer">
+      <RouterLink to="/">Về trang chủ</RouterLink>
+    </p>
+  </CustomerAuthCard>
 </template>

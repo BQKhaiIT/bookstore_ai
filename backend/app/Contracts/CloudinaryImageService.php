@@ -12,6 +12,11 @@ interface CloudinaryImageService
     public function uploadCover(UploadedFile $file): array;
 
     /**
+     * @return array{secure_url: string, public_id: string, asset_id: string|null}
+     */
+    public function uploadBanner(UploadedFile $file): array;
+
+    /**
      * @return array{secure_url: string, public_id: string, asset_id: string|null}|null
      */
     public function resolveAsset(string $publicId): ?array;

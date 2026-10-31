@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Webhooks\SePayCheckoutReturnController;
 use App\Http\Controllers\Auth\AdminActivationController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
@@ -8,6 +9,9 @@ use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use Illuminate\Support\Facades\Route;
+
+Route::get('/payment/sepay/return/{order}', SePayCheckoutReturnController::class)
+    ->name('sepay.checkout.return');
 
 Route::post('/register', [RegisteredUserController::class, 'store'])
     ->middleware('throttle:10,1');

@@ -92,6 +92,17 @@ describe('evaluateAuthGuard customer area', () => {
     }
   })
 
+  it('staff on customer login -> admin dashboard', () => {
+    const d = evaluateAuthGuard(admin, {
+      path: '/login',
+      fullPath: '/login',
+      name: 'login',
+      meta: { guest: true },
+      query: {},
+    })
+    expect(d).toEqual({ action: 'redirect', to: { name: 'admin-dashboard' } })
+  })
+
   it('blocked customer home -> logout', () => {
     const d = evaluateAuthGuard(
       { ...customer, isBlocked: true },
@@ -99,7 +110,7 @@ describe('evaluateAuthGuard customer area', () => {
         path: '/',
         fullPath: '/',
         name: 'home',
-        meta: { requiresAuth: true },
+        meta: {},
         query: {},
       },
     )
@@ -107,5 +118,16 @@ describe('evaluateAuthGuard customer area', () => {
       action: 'logout',
       to: { name: 'login', query: { blocked: '1' } },
     })
+  })
+
+  it('guest home -> allow', () => {
+    const d = evaluateAuthGuard(guest, {
+      path: '/',
+      fullPath: '/',
+      name: 'home',
+      meta: {},
+      query: {},
+    })
+    expect(d).toEqual({ action: 'allow' })
   })
 })

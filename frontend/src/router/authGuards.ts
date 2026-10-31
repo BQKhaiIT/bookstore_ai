@@ -135,6 +135,13 @@ export function evaluateAuthGuard(auth: AuthSnapshot, to: GuardTarget): AuthGuar
   }
 
   if (guestOnly && auth.isAuthenticated && auth.user) {
+    if (auth.isStaff) {
+      return {
+        action: 'redirect',
+        to: resolvePostAdminAuthRoute(auth.user, to.query.redirect),
+      }
+    }
+
     return {
       action: 'redirect',
       to: resolvePostCustomerAuthRoute(auth.user, to.query.redirect),

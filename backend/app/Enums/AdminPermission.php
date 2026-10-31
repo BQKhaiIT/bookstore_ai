@@ -13,6 +13,7 @@ enum AdminPermission: string
     case Payments = 'payments';
     case Reviews = 'reviews';
     case Users = 'users';
+    case Banners = 'banners';
 
     /**
      * @return list<string>

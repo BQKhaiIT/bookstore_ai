@@ -95,6 +95,11 @@ export const adminProtectedRoutes: RouteRecordRaw = {
       component: () => import('@/views/admin/ReviewsView.vue'),
     },
     {
+      path: 'banners',
+      name: 'admin-banners',
+      component: () => import('@/views/admin/BannersView.vue'),
+    },
+    {
       path: 'staff',
       name: 'admin-staff',
       meta: { requiresSuperAdmin: true },

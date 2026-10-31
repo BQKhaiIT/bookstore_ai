@@ -50,19 +50,32 @@ class CloudinaryImageService implements CloudinaryImageServiceContract
 
     public function uploadCover(UploadedFile $file): array
     {
+        return $this->uploadToFolder($file, (string) config('cloudinary.upload_folder'), 'upload ảnh bìa');
+    }
+
+    public function uploadBanner(UploadedFile $file): array
+    {
+        return $this->uploadToFolder($file, (string) config('cloudinary.banner_upload_folder'), 'upload banner');
+    }
+
+    /**
+     * @return array{secure_url: string, public_id: string, asset_id: string|null}
+     */
+    private function uploadToFolder(UploadedFile $file, string $folder, string $context): array
+    {
         try {
             $response = $this->uploadApi()->upload($file->getRealPath(), [
-                'folder' => config('cloudinary.upload_folder'),
+                'folder' => $folder,
                 'resource_type' => AssetType::IMAGE,
             ]);
         } catch (Throwable $e) {
-            throw CloudinaryApiErrorMapper::toServiceException($e, 'upload ảnh bìa');
+            throw CloudinaryApiErrorMapper::toServiceException($e, $context);
         }
 
         try {
             return $this->mapAsset($response->getArrayCopy());
         } catch (RuntimeException $e) {
-            throw CloudinaryApiErrorMapper::toServiceException($e, 'upload ảnh bìa');
+            throw CloudinaryApiErrorMapper::toServiceException($e, $context);
         }
     }
 

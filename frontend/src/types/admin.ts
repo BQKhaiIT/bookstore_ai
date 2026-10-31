@@ -9,11 +9,12 @@ export type OrderStatus =
   | 'delivered'
   | 'cancelled'
 export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded'
-export type PaymentMethod = 'cod' | 'bank_transfer'
+export type PaymentMethod = 'cod' | 'sandbox_online' | 'bank_transfer'
 export type ReviewStatus = 'pending' | 'approved' | 'rejected'
 
 export interface DashboardStats {
   revenue: number
+  sandbox_revenue: number
   orders_count: number
   books_count: number
   customers_count: number
@@ -104,6 +105,9 @@ export interface AdminPayment {
   id: number
   order_id: number
   method: PaymentMethod | string
+  provider?: string | null
+  environment?: string | null
+  invoice_number?: string | null
   amount: number
   status: PaymentStatus
   transaction_reference: string | null
@@ -120,6 +124,28 @@ export interface AdminReview {
   status: ReviewStatus
   user?: User
   book?: AdminBook
+  created_at?: string | null
+  updated_at?: string | null
+}
+
+export type BannerType = 'hero' | 'banner'
+
+export interface AdminBanner {
+  id: number
+  type: BannerType
+  title: string
+  description: string | null
+  image_url: string | null
+  image_public_id: string | null
+  mobile_image_url: string | null
+  mobile_image_public_id: string | null
+  cta_text: string | null
+  link_url: string | null
+  position: string
+  sort_order: number
+  is_active: boolean
+  starts_at: string | null
+  ends_at: string | null
   created_at?: string | null
   updated_at?: string | null
 }

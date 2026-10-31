@@ -36,9 +36,17 @@ trait InteractsWithSpaAuth
             ->json($method, $uri, $data);
     }
 
-    protected function postSpa(string $uri, array $data = [], bool $refreshCsrf = true): TestResponse
+    protected function postSpa(string $uri, array $data = [], bool $refreshCsrf = true, array $headers = []): TestResponse
     {
-        return $this->spaJson('POST', $uri, $data, $refreshCsrf);
+        if ($refreshCsrf) {
+            $this->initializeSpaSession();
+        }
+
+        return $this
+            ->withCredentials()
+            ->withHeaders(array_merge($this->spaOriginHeaders(), $headers))
+            ->withHeader('X-CSRF-TOKEN', (string) session()->token())
+            ->postJson($uri, $data);
     }
 
     protected function patchSpa(string $uri, array $data = [], bool $refreshCsrf = true): TestResponse
