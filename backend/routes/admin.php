@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AuthorController;
 use App\Http\Controllers\Admin\BookController;
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\CloudinaryMediaController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\PaymentController;
@@ -24,7 +25,10 @@ Route::middleware(['auth:sanctum', 'active', 'verified', 'admin'])->group(functi
     });
 
     Route::middleware('permission:books')->group(function (): void {
+        Route::get('/cloudinary/images', [CloudinaryMediaController::class, 'index']);
         Route::post('/books/{book}/cover', [BookController::class, 'uploadCover']);
+        Route::put('/books/{book}/cover', [BookController::class, 'assignCover']);
+        Route::delete('/books/{book}/cover', [BookController::class, 'removeCover']);
         Route::apiResource('books', BookController::class);
     });
 

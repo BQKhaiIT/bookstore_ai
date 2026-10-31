@@ -17,7 +17,7 @@ class UploadBookCoverRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'cover' => ['required', 'file', 'image', 'mimes:jpeg,jpg,png,webp', 'max:2048'],
+            'cover' => ['required', 'file', 'image', 'mimes:jpeg,jpg,png,webp', 'max:5120'],
         ];
     }
 }

@@ -24,6 +24,8 @@ class Book extends Model
         'price',
         'stock_quantity',
         'cover_url',
+        'cover_public_id',
+        'cover_asset_id',
         'status',
     ];
 

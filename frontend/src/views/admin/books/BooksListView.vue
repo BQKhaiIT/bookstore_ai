@@ -115,7 +115,7 @@ async function onDelete(book: AdminBook): Promise<void> {
             <CTableDataCell colspan="7" class="text-center text-body-secondary py-4">Không có sách.</CTableDataCell>
           </CTableRow>
           <CTableRow v-for="book in items" :key="book.id">
-            <CTableDataCell><BookImagePlaceholder /></CTableDataCell>
+            <CTableDataCell><BookImagePlaceholder :src="book.cover_url" /></CTableDataCell>
             <CTableDataCell>
               <div class="fw-medium">{{ book.title }}</div>
               <small class="text-body-secondary">{{ book.isbn ?? '—' }}</small>

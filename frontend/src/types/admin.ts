@@ -54,6 +54,8 @@ export interface AdminBook {
   price: number
   stock_quantity: number
   cover_url: string | null
+  cover_public_id?: string | null
+  cover_asset_id?: string | null
   status: BookStatus
   author_ids?: number[]
   category_ids?: number[]
@@ -120,6 +122,22 @@ export interface AdminReview {
   book?: AdminBook
   created_at?: string | null
   updated_at?: string | null
+}
+
+export interface CloudinaryImage {
+  public_id: string
+  secure_url: string
+  display_name: string
+  width: number | null
+  height: number | null
+  format: string | null
+  created_at: string | null
+}
+
+export interface CloudinaryImageListMeta {
+  next_cursor: string | null
+  has_more: boolean
+  search?: string | null
 }
 
 export interface PaginationMeta {

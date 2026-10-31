@@ -28,6 +28,8 @@ class BookResource extends JsonResource
             'price' => $this->price,
             'stock_quantity' => $this->stock_quantity,
             'cover_url' => $this->cover_url,
+            'cover_public_id' => $this->cover_public_id,
+            'cover_asset_id' => $this->cover_asset_id,
             'status' => $this->status instanceof \BackedEnum ? $this->status->value : $this->status,
             'author_ids' => $this->whenLoaded('authors', fn () => $this->authors->pluck('id')->values()),
             'category_ids' => $this->whenLoaded('categories', fn () => $this->categories->pluck('id')->values()),

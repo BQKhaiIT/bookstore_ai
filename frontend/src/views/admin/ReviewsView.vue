@@ -56,7 +56,7 @@ async function setStatus(review: AdminReview, status: 'approved' | 'rejected'): 
           <CTableRow v-for="r in items" :key="r.id">
             <CTableDataCell>
               <div class="d-flex align-items-center gap-2">
-                <BookImagePlaceholder width="36px" height="48px" />
+                <BookImagePlaceholder :src="r.book?.cover_url" width="36px" height="48px" />
                 <span>{{ r.book?.title ?? `#${r.book_id}` }}</span>
               </div>
             </CTableDataCell>

@@ -3,9 +3,11 @@ import { createBook, fetchBook, fetchBookFormOptions, updateBook } from '@/api/a
 import { ApiError, firstFieldError } from '@/api/errors'
 import { useToastStore } from '@/stores/toast'
 import type { Author, Category, Publisher } from '@/types/admin'
+import BookCoverUploader from '@/components/admin/BookCoverUploader.vue'
 import BookImagePlaceholder from '@/components/admin/BookImagePlaceholder.vue'
+import type { AdminBook } from '@/types/admin'
 import { bookStatusLabel } from '@/utils/adminLabels'
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 const route = useRoute()
@@ -19,6 +21,7 @@ const fieldErrors = ref<Record<string, string[]>>({})
 const publishers = ref<Publisher[]>([])
 const authors = ref<Author[]>([])
 const categories = ref<Category[]>([])
+const coverUrl = ref<string | null>(null)
 
 const form = reactive({
   title: '',
@@ -26,13 +29,14 @@ const form = reactive({
   description: '',
   price: 0,
   stock_quantity: 0,
-  status: 'draft' as string,
-  publisher_id: '' as number | '',
-  author_ids: [] as number[],
-  category_ids: [] as number[],
+  status: 'draft',
+  publisher_id: '',
+  author_ids: [] as string[],
+  category_ids: [] as string[],
 })
 
-onMounted(async () => {
+async function loadPage(): Promise<void> {
+  loading.value = true
   try {
     const opts = await fetchBookFormOptions()
     publishers.value = opts.publishers
@@ -46,9 +50,15 @@ onMounted(async () => {
       form.price = book.price
       form.stock_quantity = book.stock_quantity
       form.status = book.status
-      form.publisher_id = book.publisher_id ?? ''
-      form.author_ids = book.author_ids ?? book.authors?.map((a) => a.id) ?? []
-      form.category_ids = book.category_ids ?? book.categories?.map((c) => c.id) ?? []
+      form.publisher_id = book.publisher_id != null ? String(book.publisher_id) : ''
+      form.author_ids = (book.author_ids ?? book.authors?.map((a) => a.id) ?? []).map(String)
+      form.category_ids = (book.category_ids ?? book.categories?.map((c) => c.id) ?? []).map(String)
+      coverUrl.value = book.cover_url
+    } else {
+      coverUrl.value = null
+      form.publisher_id = ''
+      form.author_ids = []
+      form.category_ids = []
     }
   } catch (e) {
     toast.error(e instanceof ApiError ? e.message : 'Không tải được dữ liệu.')
@@ -56,10 +66,22 @@ onMounted(async () => {
   } finally {
     loading.value = false
   }
-})
+}
+
+watch(
+  () => [route.name, route.params.id] as const,
+  () => {
+    void loadPage()
+  },
+  { immediate: true },
+)
 
 function err(field: string): string | undefined {
   return firstFieldError(fieldErrors.value, field)
+}
+
+function onCoverUpdated(book: AdminBook): void {
+  coverUrl.value = book.cover_url
 }
 
 async function submit(): Promise<void> {
@@ -73,18 +95,19 @@ async function submit(): Promise<void> {
     stock_quantity: Number(form.stock_quantity),
     status: form.status,
     publisher_id: form.publisher_id ? Number(form.publisher_id) : null,
-    author_ids: form.author_ids,
-    category_ids: form.category_ids,
+    author_ids: form.author_ids.map(Number),
+    category_ids: form.category_ids.map(Number),
   }
   try {
     if (isEdit.value) {
       await updateBook(bookId.value, payload)
       toast.success('Đã cập nhật sách.')
+      router.push({ name: 'admin-books' })
     } else {
-      await createBook(payload)
-      toast.success('Đã tạo sách.')
+      const created = await createBook(payload)
+      toast.success('Đã tạo sách. Bạn có thể upload ảnh bìa bên dưới.')
+      router.replace({ name: 'admin-book-edit', params: { id: created.id } })
     }
-    router.push({ name: 'admin-books' })
   } catch (e) {
     if (e instanceof ApiError) {
       fieldErrors.value = e.errors
@@ -101,7 +124,7 @@ async function submit(): Promise<void> {
   <CCard v-else class="admin-page">
     <CCardHeader>
       <div class="d-flex align-items-center gap-3">
-        <BookImagePlaceholder width="48px" height="64px" />
+        <BookImagePlaceholder :src="coverUrl" width="48px" height="64px" />
         <strong>{{ isEdit ? 'Sửa sách' : 'Thêm sách' }}</strong>
       </div>
     </CCardHeader>
@@ -140,20 +163,29 @@ async function submit(): Promise<void> {
             <CFormLabel for="publisher">Nhà xuất bản</CFormLabel>
             <CFormSelect id="publisher" v-model="form.publisher_id">
               <option value="">— Không chọn —</option>
-              <option v-for="p in publishers" :key="p.id" :value="p.id">{{ p.name }}</option>
+              <option v-for="p in publishers" :key="p.id" :value="String(p.id)">{{ p.name }}</option>
             </CFormSelect>
           </CCol>
           <CCol md="6">
             <CFormLabel>Tác giả</CFormLabel>
             <CFormSelect v-model="form.author_ids" multiple size="sm">
-              <option v-for="a in authors" :key="a.id" :value="a.id">{{ a.name }}</option>
+              <option v-for="a in authors" :key="a.id" :value="String(a.id)">{{ a.name }}</option>
             </CFormSelect>
           </CCol>
           <CCol md="6">
             <CFormLabel>Danh mục</CFormLabel>
             <CFormSelect v-model="form.category_ids" multiple size="sm">
-              <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option>
+              <option v-for="c in categories" :key="c.id" :value="String(c.id)">{{ c.name }}</option>
             </CFormSelect>
+          </CCol>
+          <CCol v-if="isEdit" md="12">
+            <CFormLabel>Ảnh bìa</CFormLabel>
+            <BookCoverUploader :book-id="bookId" :cover-url="coverUrl" @updated="onCoverUpdated" />
+          </CCol>
+          <CCol v-else md="12">
+            <CAlert color="info" class="mb-0">
+              Lưu sách trước, sau đó bạn có thể upload hoặc chọn ảnh bìa từ Cloudinary.
+            </CAlert>
           </CCol>
         </CRow>
         <div class="d-flex gap-2 mt-4">

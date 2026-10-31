@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Contracts\CloudinaryImageService;
 use App\Enums\BookStatus;
+use App\Exceptions\CloudinaryServiceException;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\AssignBookCoverRequest;
 use App\Http\Requests\Admin\StoreBookRequest;
 use App\Http\Requests\Admin\UpdateBookRequest;
 use App\Http\Requests\Admin\UploadBookCoverRequest;
@@ -12,7 +15,6 @@ use App\Models\Book;
 use App\Support\UniqueSlug;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class BookController extends Controller
 {
@@ -124,21 +126,71 @@ class BookController extends Controller
         return response()->json(null, 204);
     }
 
-    public function uploadCover(UploadBookCoverRequest $request, Book $book): JsonResponse
+    public function uploadCover(UploadBookCoverRequest $request, Book $book, CloudinaryImageService $cloudinary): JsonResponse
     {
-        if ($book->cover_url) {
-            $path = parse_url($book->cover_url, PHP_URL_PATH);
-            if (is_string($path) && str_starts_with($path, '/storage/')) {
-                Storage::disk('public')->delete(substr($path, strlen('/storage/')));
-            }
+        try {
+            $asset = $cloudinary->uploadCover($request->file('cover'));
+        } catch (CloudinaryServiceException $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+                'code' => $e->errorCode,
+            ], $e->httpStatus());
         }
 
-        $stored = $request->file('cover')->store('covers', 'public');
-        $book->cover_url = Storage::disk('public')->url($stored);
+        $this->applyCoverAsset($book, $asset);
+
+        return response()->json([
+            'data' => new BookResource($book->fresh()->load(['publisher', 'authors', 'categories'])),
+        ]);
+    }
+
+    public function assignCover(AssignBookCoverRequest $request, Book $book, CloudinaryImageService $cloudinary): JsonResponse
+    {
+        $publicId = $request->validated('public_id');
+
+        try {
+            $asset = $cloudinary->resolveAsset($publicId);
+        } catch (CloudinaryServiceException $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+                'code' => $e->errorCode,
+            ], $e->httpStatus());
+        }
+
+        if ($asset === null) {
+            return response()->json([
+                'message' => 'Không tìm thấy ảnh trên Cloudinary.',
+                'code' => 'CLOUDINARY_ASSET_NOT_FOUND',
+            ], 422);
+        }
+
+        $this->applyCoverAsset($book, $asset);
+
+        return response()->json([
+            'data' => new BookResource($book->fresh()->load(['publisher', 'authors', 'categories'])),
+        ]);
+    }
+
+    public function removeCover(Book $book): JsonResponse
+    {
+        $book->cover_url = null;
+        $book->cover_public_id = null;
+        $book->cover_asset_id = null;
         $book->save();
 
         return response()->json([
             'data' => new BookResource($book->fresh()->load(['publisher', 'authors', 'categories'])),
         ]);
+    }
+
+    /**
+     * @param  array{secure_url: string, public_id: string, asset_id: string|null}  $asset
+     */
+    private function applyCoverAsset(Book $book, array $asset): void
+    {
+        $book->cover_url = $asset['secure_url'];
+        $book->cover_public_id = $asset['public_id'];
+        $book->cover_asset_id = $asset['asset_id'];
+        $book->save();
     }
 }

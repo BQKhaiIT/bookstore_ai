@@ -72,10 +72,75 @@ paths:
   /books/{book}/cover:
     post:
       tags: [Admin]
-      summary: Upload ảnh bìa
+      summary: Upload ảnh bìa lên Cloudinary (JPG/PNG/WebP, tối đa 5MB)
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [cover]
+              properties:
+                cover:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: OK — BookResource (cover_url, cover_public_id, cover_asset_id)
+        '422':
+          description: Validation error
+        '502':
+          description: Cloudinary upload failed
+    put:
+      tags: [Admin]
+      summary: Gán ảnh bìa từ asset Cloudinary có sẵn
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [public_id]
+              properties:
+                public_id:
+                  type: string
       responses:
         '200':
           description: OK
+        '422':
+          description: Asset not found hoặc validation error
+    delete:
+      tags: [Admin]
+      summary: Gỡ ảnh bìa (chỉ xóa tham chiếu DB, không xóa asset Cloudinary)
+      responses:
+        '200':
+          description: OK
+
+  /cloudinary/images:
+    get:
+      tags: [Admin]
+      summary: Duyệt/tìm ảnh Cloudinary (Search API khi có search, cursor pagination)
+      parameters:
+        - in: query
+          name: search
+          schema:
+            type: string
+            maxLength: 128
+          description: Tìm theo prefix tên file / public_id (server-side)
+        - in: query
+          name: per_page
+          schema:
+            type: integer
+            maximum: 100
+        - in: query
+          name: cursor
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+        '502':
+          description: Cloudinary list failed
 
   /categories:
     get:

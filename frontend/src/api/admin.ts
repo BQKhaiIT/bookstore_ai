@@ -1,4 +1,4 @@
-import { api } from '@/api/client'
+import { api, ensureCsrfCookie } from '@/api/client'
 import type {
   AdminBook,
   AdminOrder,
@@ -6,6 +6,8 @@ import type {
   AdminReview,
   Author,
   Category,
+  CloudinaryImage,
+  CloudinaryImageListMeta,
   DashboardStats,
   PaginatedResponse,
   Publisher,
@@ -92,6 +94,37 @@ export async function deleteBook(id: number): Promise<void> {
     },
     () => getMockAdminApi().deleteBook(id),
   )
+}
+
+export async function uploadBookCover(bookId: number, file: File): Promise<AdminBook> {
+  await ensureCsrfCookie()
+  const formData = new FormData()
+  formData.append('cover', file)
+  const { data } = await api.post<{ data: AdminBook }>(`${prefix}/books/${bookId}/cover`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
+  return data.data
+}
+
+export async function assignBookCoverFromCloudinary(bookId: number, publicId: string): Promise<AdminBook> {
+  const { data } = await api.put<{ data: AdminBook }>(`${prefix}/books/${bookId}/cover`, {
+    public_id: publicId,
+  })
+  return data.data
+}
+
+export async function removeBookCover(bookId: number): Promise<AdminBook> {
+  const { data } = await api.delete<{ data: AdminBook }>(`${prefix}/books/${bookId}/cover`)
+  return data.data
+}
+
+export async function fetchCloudinaryImages(
+  params: ListParams = {},
+): Promise<{ data: CloudinaryImage[]; meta: CloudinaryImageListMeta }> {
+  const { data } = await api.get<{ data: CloudinaryImage[]; meta: CloudinaryImageListMeta }>(
+    `${prefix}/cloudinary/images${buildQuery(params)}`,
+  )
+  return data
 }
 
 export async function fetchCategories(params: ListParams = {}): Promise<PaginatedResponse<Category>> {
