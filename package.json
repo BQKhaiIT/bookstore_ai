@@ -1,0 +1,8 @@
+{
+  "name": "bookstore-ai",
+  "private": true,
+  "scripts": {
+    "tunnel": "node scripts/tunnel.mjs",
+    "test:tunnel": "node --test scripts/tunnel.test.mjs"
+  }
+}

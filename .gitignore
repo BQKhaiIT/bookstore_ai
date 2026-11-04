@@ -13,7 +13,10 @@
 *.pfx
 *.secret
 *.credentials
-secrets/
+/secrets/
+docker/secrets/*
+!docker/secrets/*.example
+!docker/secrets/.gitkeep
 credentials.json
 service-account*.json
 auth.json
@@ -97,6 +100,7 @@ wandb/
 checkpoints/
 
 # 7. DATABASE & BACKUPS
+backups/
 *.sqlite
 *.sqlite3
 *.db

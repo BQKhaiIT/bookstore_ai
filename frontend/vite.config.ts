@@ -13,5 +13,8 @@ export default defineConfig({
   server: {
     port: 5173,
     strictPort: true,
+    ...(process.env.VITE_DEV_POLLING === '1'
+      ? { host: true, watch: { usePolling: true, interval: 300 } }
+      : {}),
   },
 })
