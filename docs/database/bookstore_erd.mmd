@@ -1,0 +1,285 @@
+%% Source of truth: PostgreSQL bookstore_ai, schema public.
+%% Tables 27. Columns 199. Enforced foreign keys 19. No row data.
+%% recommendation and chatbot: no tables in the live database.
+%% sessions.user_id, personal_access_tokens.tokenable_*, admin_audit_logs.target_* are not foreign keys.
+erDiagram
+  %% auth_rbac
+  users {
+    bigint id PK "not null, identity"
+    varchar name "255, not null"
+    varchar email UK "255, not null"
+    timestamp email_verified_at "null"
+    varchar password "255, not null"
+    varchar remember_token "100, null"
+    timestamp created_at "null"
+    timestamp updated_at "null"
+    varchar role "20, not null"
+    varchar status "20, not null"
+    json admin_permissions "null"
+  }
+  user_addresses {
+    bigint id PK "not null, identity"
+    bigint user_id "not null, FK"
+    varchar recipient_name "150, not null"
+    varchar phone "20, not null"
+    varchar province "120, not null"
+    varchar district "120, not null"
+    varchar ward "120, not null"
+    text address_line "not null"
+    boolean is_default "not null"
+    timestamp created_at "null"
+    timestamp updated_at "null"
+  }
+  password_reset_tokens {
+    varchar email PK "255, not null"
+    varchar token "255, not null"
+    timestamp created_at "null"
+  }
+  personal_access_tokens {
+    bigint id PK "not null, identity"
+    varchar tokenable_type "255, not null"
+    bigint tokenable_id "not null"
+    text name "not null"
+    varchar token UK "64, not null"
+    text abilities "null"
+    timestamp last_used_at "null"
+    timestamp expires_at "null"
+    timestamp created_at "null"
+    timestamp updated_at "null"
+  }
+  sessions {
+    varchar id PK "255, not null"
+    bigint user_id "null"
+    varchar ip_address "45, null"
+    text user_agent "null"
+    text payload "not null"
+    int last_activity "not null"
+  }
+  admin_invitations {
+    bigint id PK "not null, identity"
+    varchar email "255, not null"
+    varchar name "255, not null"
+    varchar role "32, not null"
+    json permissions "null"
+    varchar token_hash UK "64, not null"
+    bigint invited_by "null, FK"
+    timestamp expires_at "not null"
+    timestamp accepted_at "null"
+    timestamp created_at "null"
+    timestamp updated_at "null"
+  }
+  admin_audit_logs {
+    bigint id PK "not null, identity"
+    bigint actor_id "null, FK"
+    varchar action "64, not null"
+    varchar target_type "64, null"
+    bigint target_id "null"
+    json meta "null"
+    varchar ip_address "45, null"
+    timestamp created_at "not null"
+  }
+  %% catalog
+  publishers {
+    bigint id PK "not null, identity"
+    varchar name UK "255, not null"
+    timestamp created_at "null"
+    timestamp updated_at "null"
+  }
+  authors {
+    bigint id PK "not null, identity"
+    varchar name "255, not null"
+    text biography "null"
+    timestamp created_at "null"
+    timestamp updated_at "null"
+  }
+  categories {
+    bigint id PK "not null, identity"
+    varchar name "150, not null"
+    varchar slug UK "170, not null"
+    timestamp created_at "null"
+    timestamp updated_at "null"
+  }
+  books {
+    bigint id PK "not null, identity"
+    bigint publisher_id "null, FK"
+    varchar isbn UK "20, null"
+    varchar title "255, not null"
+    varchar slug UK "255, not null"
+    text description "null"
+    bigint price "not null"
+    int stock_quantity "not null"
+    text cover_url "null"
+    varchar status "20, not null"
+    timestamp created_at "null"
+    timestamp updated_at "null"
+    varchar cover_public_id "255, null"
+    varchar cover_asset_id "255, null"
+  }
+  book_authors {
+    bigint book_id PK "not null, FK"
+    bigint author_id PK "not null, FK"
+  }
+  book_categories {
+    bigint book_id PK "not null, FK"
+    bigint category_id PK "not null, FK"
+  }
+  %% cart
+  carts {
+    bigint id PK "not null, identity"
+    bigint user_id UK "not null, FK"
+    timestamp created_at "null"
+    timestamp updated_at "null"
+  }
+  cart_items {
+    bigint id PK "not null, identity"
+    bigint cart_id "not null, FK"
+    bigint book_id "not null, FK"
+    int quantity "not null"
+    timestamp created_at "null"
+    timestamp updated_at "null"
+  }
+  wishlists {
+    bigint id PK "not null, identity"
+    bigint user_id "not null, FK"
+    bigint book_id "not null, FK"
+    timestamp created_at "not null"
+  }
+  %% orders
+  orders {
+    bigint id PK "not null, identity"
+    bigint user_id "not null, FK"
+    varchar order_code UK "40, not null"
+    varchar idempotency_key "100, null"
+    varchar idempotency_request_hash "64, null"
+    varchar status "20, not null"
+    bigint subtotal_amount "not null"
+    bigint shipping_fee "not null"
+    bigint total_amount "not null"
+    json shipping_address_snapshot "not null"
+    text customer_note "null"
+    timestamp cancelled_at "null"
+    timestamp created_at "null"
+    timestamp updated_at "null"
+  }
+  order_items {
+    bigint id PK "not null, identity"
+    bigint order_id "not null, FK"
+    bigint book_id "not null, FK"
+    varchar book_title "255, not null"
+    int quantity "not null"
+    bigint unit_price "not null"
+    bigint subtotal "not null"
+    timestamp created_at "not null"
+  }
+  %% payments
+  payments {
+    bigint id PK "not null, identity"
+    bigint order_id "not null, FK"
+    varchar method "20, not null"
+    bigint amount "not null"
+    varchar status "20, not null"
+    varchar transaction_reference "150, null"
+    timestamp paid_at "null"
+    timestamp created_at "null"
+    timestamp updated_at "null"
+    varchar provider "30, null"
+    varchar environment "20, null"
+    varchar invoice_number UK "64, null"
+    json metadata "null"
+  }
+  %% reviews
+  reviews {
+    bigint id PK "not null, identity"
+    bigint user_id "not null, FK"
+    bigint book_id "not null, FK"
+    smallint rating "not null"
+    text comment "null"
+    varchar status "20, not null"
+    timestamp created_at "null"
+    timestamp updated_at "null"
+  }
+  %% cms
+  banners {
+    bigint id PK "not null, identity"
+    varchar type "16, not null"
+    varchar title "255, not null"
+    text description "null"
+    varchar image_url "255, null"
+    varchar image_public_id "255, null"
+    varchar mobile_image_url "255, null"
+    varchar mobile_image_public_id "255, null"
+    varchar cta_text "255, null"
+    varchar link_url "2048, null"
+    varchar position "64, not null"
+    int sort_order "not null"
+    boolean is_active "not null"
+    timestamp starts_at "null"
+    timestamp ends_at "null"
+    timestamp created_at "null"
+    timestamp updated_at "null"
+  }
+  %% laravel_infra
+  cache {
+    varchar key PK "255, not null"
+    text value "not null"
+    bigint expiration "not null"
+  }
+  cache_locks {
+    varchar key PK "255, not null"
+    varchar owner "255, not null"
+    bigint expiration "not null"
+  }
+  jobs {
+    bigint id PK "not null, identity"
+    varchar queue "255, not null"
+    text payload "not null"
+    smallint attempts "not null"
+    int reserved_at "null"
+    int available_at "not null"
+    int created_at "not null"
+  }
+  job_batches {
+    varchar id PK "255, not null"
+    varchar name "255, not null"
+    int total_jobs "not null"
+    int pending_jobs "not null"
+    int failed_jobs "not null"
+    text failed_job_ids "not null"
+    text options "null"
+    int cancelled_at "null"
+    int created_at "not null"
+    int finished_at "null"
+  }
+  failed_jobs {
+    bigint id PK "not null, identity"
+    varchar uuid UK "255, not null"
+    varchar connection "255, not null"
+    varchar queue "255, not null"
+    text payload "not null"
+    text exception "not null"
+    timestamp failed_at "not null"
+  }
+  migrations {
+    int id PK "not null, identity"
+    varchar migration "255, not null"
+    int batch "not null"
+  }
+  users |o--o{ admin_audit_logs : "actor_id SET NULL"
+  users |o--o{ admin_invitations : "invited_by SET NULL"
+  authors ||--o{ book_authors : "author_id CASCADE"
+  books ||--o{ book_authors : "book_id CASCADE"
+  books ||--o{ book_categories : "book_id CASCADE"
+  categories ||--o{ book_categories : "category_id CASCADE"
+  publishers |o--o{ books : "publisher_id SET NULL"
+  books ||--o{ cart_items : "book_id RESTRICT"
+  carts ||--o{ cart_items : "cart_id CASCADE"
+  users ||--o| carts : "user_id CASCADE"
+  books ||--o{ order_items : "book_id RESTRICT"
+  orders ||--o{ order_items : "order_id RESTRICT"
+  users ||--o{ orders : "user_id RESTRICT"
+  orders ||--o{ payments : "order_id RESTRICT"
+  books ||--o{ reviews : "book_id RESTRICT"
+  users ||--o{ reviews : "user_id CASCADE"
+  users ||--o{ user_addresses : "user_id CASCADE"
+  books ||--o{ wishlists : "book_id RESTRICT"
+  users ||--o{ wishlists : "user_id CASCADE"

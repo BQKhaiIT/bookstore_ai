@@ -1,0 +1,451 @@
+// Source of truth: PostgreSQL bookstore_ai, schema public.
+// Read-only catalog export. No row data and no credentials.
+// Server: PostgreSQL 18.6. Tables 27. Columns 199. Foreign keys 19.
+// Groups with no live tables: recommendation, chatbot.
+// Logical columns without a foreign key are noted on the table and are not drawn as Ref.
+
+Project bookstore_ai {
+  database_type: 'PostgreSQL'
+  Note: '''Reverse engineered from the live public schema. docs/database/schema.sql is a reference and is not this diagram.'''
+}
+
+// Group: auth_rbac
+Table users {
+  id bigint [pk, increment]
+  name varchar(255) [not null]
+  email varchar(255) [not null, unique]
+  email_verified_at timestamp
+  password varchar(255) [not null]
+  remember_token varchar(100)
+  created_at timestamp
+  updated_at timestamp
+  role varchar(20) [not null, default: 'customer', note: 'CHECK users_role_check IN (customer, admin, super_admin)']
+  status varchar(20) [not null, default: 'active']
+  admin_permissions json
+  Note: 'CHECK users_role_check: role IN (customer, admin, super_admin). status has no database CHECK.'
+}
+
+Table user_addresses {
+  id bigint [pk, increment]
+  user_id bigint [not null]
+  recipient_name varchar(150) [not null]
+  phone varchar(20) [not null]
+  province varchar(120) [not null]
+  district varchar(120) [not null]
+  ward varchar(120) [not null]
+  address_line text [not null]
+  is_default boolean [not null, default: false]
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    (user_id) [name: 'user_addresses_user_id_index']
+  }
+}
+
+Table password_reset_tokens {
+  email varchar(255) [pk]
+  token varchar(255) [not null]
+  created_at timestamp
+}
+
+Table personal_access_tokens {
+  id bigint [pk, increment]
+  tokenable_type varchar(255) [not null]
+  tokenable_id bigint [not null]
+  name text [not null]
+  token varchar(64) [not null, unique]
+  abilities text
+  last_used_at timestamp
+  expires_at timestamp
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    (expires_at) [name: 'personal_access_tokens_expires_at_index']
+    (tokenable_type, tokenable_id) [name: 'personal_access_tokens_tokenable_type_tokenable_id_index']
+  }
+  Note: 'tokenable_type + tokenable_id is a Laravel morph index. No foreign key is enforced.'
+}
+
+Table sessions {
+  id varchar(255) [pk]
+  user_id bigint
+  ip_address varchar(45)
+  user_agent text
+  payload text [not null]
+  last_activity integer [not null]
+
+  indexes {
+    (last_activity) [name: 'sessions_last_activity_index']
+    (user_id) [name: 'sessions_user_id_index']
+  }
+  Note: 'user_id is indexed and nullable. PostgreSQL does not enforce a foreign key. No Eloquent relationship is declared.'
+}
+
+Table admin_invitations {
+  id bigint [pk, increment]
+  email varchar(255) [not null]
+  name varchar(255) [not null]
+  role varchar(32) [not null, default: 'admin']
+  permissions json
+  token_hash varchar(64) [not null, unique]
+  invited_by bigint
+  expires_at timestamp [not null]
+  accepted_at timestamp
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    (email, accepted_at) [name: 'admin_invitations_email_accepted_at_index']
+  }
+}
+
+Table admin_audit_logs {
+  id bigint [pk, increment]
+  actor_id bigint
+  action varchar(64) [not null]
+  target_type varchar(64)
+  target_id bigint
+  meta json
+  ip_address varchar(45)
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+
+  indexes {
+    (action, created_at) [name: 'admin_audit_logs_action_created_at_index']
+  }
+  Note: 'target_type + target_id are not foreign keys.'
+}
+
+TableGroup auth_rbac {
+  users
+  user_addresses
+  password_reset_tokens
+  personal_access_tokens
+  sessions
+  admin_invitations
+  admin_audit_logs
+}
+
+// Group: catalog
+Table publishers {
+  id bigint [pk, increment]
+  name varchar(255) [not null, unique]
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table authors {
+  id bigint [pk, increment]
+  name varchar(255) [not null]
+  biography text
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table categories {
+  id bigint [pk, increment]
+  name varchar(150) [not null]
+  slug varchar(170) [not null, unique]
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table books {
+  id bigint [pk, increment]
+  publisher_id bigint
+  isbn varchar(20) [unique]
+  title varchar(255) [not null]
+  slug varchar(255) [not null, unique]
+  description text
+  price bigint [not null]
+  stock_quantity integer [not null, default: 0]
+  cover_url text
+  status varchar(20) [not null, default: 'draft']
+  created_at timestamp
+  updated_at timestamp
+  cover_public_id varchar(255)
+  cover_asset_id varchar(255)
+
+  indexes {
+    (status, price) [name: 'books_status_price_index']
+    (title) [name: 'books_title_index']
+  }
+  Note: 'isbn UNIQUE allows multiple NULLs.'
+}
+
+Table book_authors {
+  book_id bigint [pk]
+  author_id bigint [pk]
+}
+
+Table book_categories {
+  book_id bigint [pk]
+  category_id bigint [pk]
+}
+
+TableGroup catalog {
+  publishers
+  authors
+  categories
+  books
+  book_authors
+  book_categories
+}
+
+// Group: cart
+Table carts {
+  id bigint [pk, increment]
+  user_id bigint [not null, unique]
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table cart_items {
+  id bigint [pk, increment]
+  cart_id bigint [not null]
+  book_id bigint [not null]
+  quantity integer [not null]
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    (cart_id, book_id) [unique, name: 'cart_items_cart_id_book_id_unique']
+  }
+}
+
+Table wishlists {
+  id bigint [pk, increment]
+  user_id bigint [not null]
+  book_id bigint [not null]
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+
+  indexes {
+    (user_id, book_id) [unique, name: 'wishlists_user_id_book_id_unique']
+  }
+}
+
+TableGroup cart {
+  carts
+  cart_items
+  wishlists
+}
+
+// Group: orders
+Table orders {
+  id bigint [pk, increment]
+  user_id bigint [not null]
+  order_code varchar(40) [not null, unique]
+  idempotency_key varchar(100)
+  idempotency_request_hash varchar(64)
+  status varchar(20) [not null, default: 'pending']
+  subtotal_amount bigint [not null]
+  shipping_fee bigint [not null, default: '0']
+  total_amount bigint [not null]
+  shipping_address_snapshot json [not null]
+  customer_note text
+  cancelled_at timestamp
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    (status, created_at) [name: 'orders_status_created_at_index']
+    (user_id, created_at) [name: 'orders_user_id_created_at_index']
+    (user_id, idempotency_key) [unique, name: 'orders_user_id_idempotency_key_unique']
+  }
+  Note: 'UNIQUE (user_id, idempotency_key) allows multiple rows when idempotency_key is NULL.'
+}
+
+Table order_items {
+  id bigint [pk, increment]
+  order_id bigint [not null]
+  book_id bigint [not null]
+  book_title varchar(255) [not null]
+  quantity integer [not null]
+  unit_price bigint [not null]
+  subtotal bigint [not null]
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+
+  indexes {
+    (order_id, book_id) [unique, name: 'order_items_order_id_book_id_unique']
+  }
+}
+
+TableGroup orders {
+  orders
+  order_items
+}
+
+// Group: payments
+Table payments {
+  id bigint [pk, increment]
+  order_id bigint [not null]
+  method varchar(20) [not null, default: 'cod']
+  amount bigint [not null]
+  status varchar(20) [not null, default: 'pending']
+  transaction_reference varchar(150)
+  paid_at timestamp
+  created_at timestamp
+  updated_at timestamp
+  provider varchar(30)
+  environment varchar(20)
+  invoice_number varchar(64) [unique]
+  metadata json
+
+  indexes {
+    (order_id, created_at) [name: 'payments_order_id_created_at_index']
+    (order_id) [unique, name: 'uq_payments_one_paid_per_order', note: 'WHERE status = paid']
+  }
+  Note: 'Partial unique index uq_payments_one_paid_per_order on (order_id) WHERE status = paid.'
+}
+
+TableGroup payments {
+  payments
+}
+
+// Group: reviews
+Table reviews {
+  id bigint [pk, increment]
+  user_id bigint [not null]
+  book_id bigint [not null]
+  rating smallint [not null]
+  comment text
+  status varchar(20) [not null, default: 'pending']
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    (book_id, status) [name: 'reviews_book_id_status_index']
+    (user_id, book_id) [unique, name: 'reviews_user_id_book_id_unique']
+  }
+}
+
+TableGroup reviews {
+  reviews
+}
+
+// Group: cms
+Table banners {
+  id bigint [pk, increment]
+  type varchar(16) [not null]
+  title varchar(255) [not null]
+  description text
+  image_url varchar(255)
+  image_public_id varchar(255)
+  mobile_image_url varchar(255)
+  mobile_image_public_id varchar(255)
+  cta_text varchar(255)
+  link_url varchar(2048)
+  position varchar(64) [not null, default: 'homepage']
+  sort_order integer [not null, default: 0]
+  is_active boolean [not null, default: false]
+  starts_at timestamp
+  ends_at timestamp
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    (type, position, is_active, sort_order) [name: 'banners_type_position_is_active_sort_order_index']
+  }
+}
+
+TableGroup cms {
+  banners
+}
+
+// Group: laravel_infra
+Table cache {
+  key varchar(255) [pk]
+  value text [not null]
+  expiration bigint [not null]
+
+  indexes {
+    (expiration) [name: 'cache_expiration_index']
+  }
+}
+
+Table cache_locks {
+  key varchar(255) [pk]
+  owner varchar(255) [not null]
+  expiration bigint [not null]
+
+  indexes {
+    (expiration) [name: 'cache_locks_expiration_index']
+  }
+}
+
+Table jobs {
+  id bigint [pk, increment]
+  queue varchar(255) [not null]
+  payload text [not null]
+  attempts smallint [not null]
+  reserved_at integer
+  available_at integer [not null]
+  created_at integer [not null]
+
+  indexes {
+    (queue) [name: 'jobs_queue_index']
+  }
+}
+
+Table job_batches {
+  id varchar(255) [pk]
+  name varchar(255) [not null]
+  total_jobs integer [not null]
+  pending_jobs integer [not null]
+  failed_jobs integer [not null]
+  failed_job_ids text [not null]
+  options text
+  cancelled_at integer
+  created_at integer [not null]
+  finished_at integer
+}
+
+Table failed_jobs {
+  id bigint [pk, increment]
+  uuid varchar(255) [not null, unique]
+  connection varchar(255) [not null]
+  queue varchar(255) [not null]
+  payload text [not null]
+  exception text [not null]
+  failed_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+
+  indexes {
+    (connection, queue, failed_at) [name: 'failed_jobs_connection_queue_failed_at_index']
+  }
+}
+
+Table migrations {
+  id integer [pk, increment]
+  migration varchar(255) [not null]
+  batch integer [not null]
+}
+
+TableGroup laravel_infra {
+  cache
+  cache_locks
+  jobs
+  job_batches
+  failed_jobs
+  migrations
+}
+
+Ref admin_audit_logs_actor_id_foreign: admin_audit_logs.actor_id > users.id [delete: set null, update: no action]
+Ref admin_invitations_invited_by_foreign: admin_invitations.invited_by > users.id [delete: set null, update: no action]
+Ref book_authors_author_id_foreign: book_authors.author_id > authors.id [delete: cascade, update: no action]
+Ref book_authors_book_id_foreign: book_authors.book_id > books.id [delete: cascade, update: no action]
+Ref book_categories_book_id_foreign: book_categories.book_id > books.id [delete: cascade, update: no action]
+Ref book_categories_category_id_foreign: book_categories.category_id > categories.id [delete: cascade, update: no action]
+Ref books_publisher_id_foreign: books.publisher_id > publishers.id [delete: set null, update: no action]
+Ref cart_items_book_id_foreign: cart_items.book_id > books.id [delete: restrict, update: no action]
+Ref cart_items_cart_id_foreign: cart_items.cart_id > carts.id [delete: cascade, update: no action]
+Ref carts_user_id_foreign: carts.user_id - users.id [delete: cascade, update: no action]
+Ref order_items_book_id_foreign: order_items.book_id > books.id [delete: restrict, update: no action]
+Ref order_items_order_id_foreign: order_items.order_id > orders.id [delete: restrict, update: no action]
+Ref orders_user_id_foreign: orders.user_id > users.id [delete: restrict, update: no action]
+Ref payments_order_id_foreign: payments.order_id > orders.id [delete: restrict, update: no action]
+Ref reviews_book_id_foreign: reviews.book_id > books.id [delete: restrict, update: no action]
+Ref reviews_user_id_foreign: reviews.user_id > users.id [delete: cascade, update: no action]
+Ref user_addresses_user_id_foreign: user_addresses.user_id > users.id [delete: cascade, update: no action]
+Ref wishlists_book_id_foreign: wishlists.book_id > books.id [delete: restrict, update: no action]
+Ref wishlists_user_id_foreign: wishlists.user_id > users.id [delete: cascade, update: no action]
